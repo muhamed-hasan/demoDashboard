@@ -13,9 +13,6 @@ export default function Home() {
   const [data, setData] = useState<TableData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'custom'>('today');
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
   const columnHelper = createColumnHelper<TableData>();
 
@@ -40,40 +37,10 @@ export default function Home() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const handleDateRangeChange = (range: 'today' | 'week' | 'month' | 'custom') => {
-    const today = new Date();
-    let start = new Date();
-    const end = today;
-
-    switch (range) {
-      case 'today':
-        start = today;
-        break;
-      case 'week':
-        start = new Date(today.setDate(today.getDate() - 7));
-        break;
-      case 'month':
-        start = new Date(today.setMonth(today.getMonth() - 1));
-        break;
-      case 'custom':
-        // Don't change the dates for custom range
-        return;
-    }
-
-    setDateRange(range);
-    setStartDate(start.toISOString().split('T')[0]);
-    setEndDate(end.toISOString().split('T')[0]);
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
-        const params = new URLSearchParams({
-          startDate,
-          endDate,
-        });
-        const response = await fetch(`/api/table-data?${params}`);
+        const response = await fetch('/api/table-data');
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
@@ -87,7 +54,7 @@ export default function Home() {
     };
 
     fetchData();
-  }, [startDate, endDate]);
+  }, []);
 
   if (loading) {
     return (
@@ -107,52 +74,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-6">Table Data</h1>
-        <div className="flex flex-wrap gap-4 items-end">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Date Range
-            </label>
-            <select
-              value={dateRange}
-              onChange={(e) => handleDateRangeChange(e.target.value as any)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            >
-              <option value="today">Today</option>
-              <option value="week">Last 7 Days</option>
-              <option value="month">Last 30 Days</option>
-              <option value="custom">Custom Range</option>
-            </select>
-          </div>
-          {dateRange === 'custom' && (
-            <>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+      <h1 className="text-3xl font-bold mb-6">Table Data</h1>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white dark:bg-gray-800 shadow-md rounded-lg">
           <thead className="bg-gray-50 dark:bg-gray-700">
