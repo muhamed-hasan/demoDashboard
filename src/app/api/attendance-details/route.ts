@@ -90,12 +90,11 @@ export async function GET(request: NextRequest) {
     const query = `
       SELECT 
         id,
-        DATE(time) as date,
-        MIN(CASE WHEN EXTRACT(HOUR FROM time) < 12 THEN time END) as first_login,
-        MAX(CASE WHEN EXTRACT(HOUR FROM time) >= 12 THEN time END) as last_logout
+        MIN(time) as first_login,
+        MAX(time) as last_logout
       FROM table3 
       WHERE DATE(time) = $1
-      GROUP BY id, DATE(time)
+      GROUP BY id
       ORDER BY id
     `;
 
@@ -127,7 +126,7 @@ export async function GET(request: NextRequest) {
       }
 
       return {
-        date: row.date,
+        date: startDate,
         id: row.id,
         name: fullName,
         department: employee?.Department || 'Unknown',
