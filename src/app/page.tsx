@@ -240,34 +240,27 @@ export default function Home() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Fetch all departments from data.json
-        const dataResponse = await fetch('/data.json');
-        if (dataResponse.ok) {
-          const employeeData = await dataResponse.json();
-          const departments = new Set<string>();
-          
-          // Extract all unique departments from employee data
-          Object.values(employeeData).forEach((employee: any) => {
-            if (employee.Department) {
-              departments.add(employee.Department);
-            }
-          });
-          
-          // Convert Set to Array and set available departments
-          setAvailableDepartments(Array.from(departments));
-        }
-        
-        // Fetch shifts from stats API
-        const today = new Date().toISOString().split('T')[0];
-        const params = new URLSearchParams({
-          start: today,
-          end: today,
-        });
-        const response = await fetch(`/api/stats?${params}`);
-        if (response.ok) {
-          const result = await response.json();
-          if (result.shiftDistribution) {
-            setAvailableShifts(Object.keys(result.shiftDistribution));
+        // Fetch all departments from details table
+        const detailsResponse = await fetch('/api/details');
+        if (detailsResponse.ok) {
+          const detailsData = await detailsResponse.json();
+          if (detailsData.success && detailsData.data) {
+            const departments = new Set<string>();
+            const shifts = new Set<string>();
+            
+            // Extract all unique departments and shifts from details table
+            detailsData.data.forEach((employee: any) => {
+              if (employee.department) {
+                departments.add(employee.department);
+              }
+              if (employee.shift) {
+                shifts.add(employee.shift);
+              }
+            });
+            
+            // Convert Sets to Arrays and set available departments and shifts
+            setAvailableDepartments(Array.from(departments).sort());
+            setAvailableShifts(Array.from(shifts).sort());
           }
         }
       } catch (err) {

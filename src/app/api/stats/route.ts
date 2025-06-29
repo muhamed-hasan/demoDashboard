@@ -1,18 +1,5 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import fs from 'fs';
-import path from 'path';
-
-interface EmployeeData {
-  'First Name': string;
-  'Last Name': string;
-  'Department': string;
-  'Shift': string;
-}
-
-interface EmployeeRecord {
-  [key: string]: EmployeeData;
-}
 
 export async function GET(request: Request) {
   try {
@@ -23,121 +10,128 @@ export async function GET(request: Request) {
     const shift = searchParams.get('shift');
     const searchText = searchParams.get('search');
 
-    // Load employee data from JSON file
-    const jsonFilePath = path.join(process.cwd(), 'public', 'data.json');
-    const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
-    const employeeData: EmployeeRecord = JSON.parse(jsonData);
-
-    // Build SQL query with date filters
-    let query = 'SELECT * FROM table3';
-    const values: string[] = [];
-    const conditions: string[] = [];
+    // Build the JOIN query with filters
+    let baseQuery = `
+      FROM table3 t
+      LEFT JOIN details d ON t.id = d.id::text
+    `;
+    let whereConditions: string[] = [];
+    let values: any[] = [];
+    let paramIndex = 1;
 
     // Date range filter
     if (startDate && endDate) {
-      conditions.push('DATE(time) >= $' + (values.length + 1) + ' AND DATE(time) <= $' + (values.length + 2));
+      whereConditions.push(`DATE(t.time) >= $${paramIndex} AND DATE(t.time) <= $${paramIndex + 1}`);
       values.push(startDate, endDate);
+      paramIndex += 2;
     } else if (startDate) {
-      conditions.push('DATE(time) >= $' + (values.length + 1));
+      whereConditions.push(`DATE(t.time) >= $${paramIndex}`);
       values.push(startDate);
+      paramIndex += 1;
     } else if (endDate) {
-      conditions.push('DATE(time) <= $' + (values.length + 1));
+      whereConditions.push(`DATE(t.time) <= $${paramIndex}`);
       values.push(endDate);
+      paramIndex += 1;
     }
 
-    // Apply WHERE clause if we have conditions
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
+    // Department filter
+    if (departments.length > 0) {
+      const deptConditions = departments.map((_, index) => `d.department = $${paramIndex + index}`);
+      whereConditions.push(`(${deptConditions.join(' OR ')})`);
+      values.push(...departments);
+      paramIndex += departments.length;
     }
 
-    const result = await pool.query(query, values);
+    // Shift filter
+    if (shift && shift !== 'all') {
+      whereConditions.push(`LOWER(d.shift) = LOWER($${paramIndex})`);
+      values.push(shift);
+      paramIndex += 1;
+    }
 
-    // Filter the results based on employee data
-    let filteredRows = result.rows.filter((row: any) => {
-      const employeeId = row.id?.toString() || '';
-      const employee = employeeData[employeeId];
-      
-      if (!employee) return false;
-      
-      // Apply department filter
-      if (departments.length > 0 && !departments.includes(employee.Department)) {
-        return false;
-      }
-      
-      // Apply shift filter
-      if (shift && shift !== 'all' && employee.Shift?.toLowerCase() !== shift.toLowerCase()) {
-        return false;
-      }
-      
-      // Apply search filter
-      if (searchText) {
-        const searchLower = searchText.toLowerCase();
-        const fullName = `${employee['First Name']} ${employee['Last Name']}`.toLowerCase();
-        if (!fullName.includes(searchLower) && 
-            !employee.Department.toLowerCase().includes(searchLower) &&
-            !employee.Shift.toLowerCase().includes(searchLower)) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
+    // Search filter
+    if (searchText) {
+      whereConditions.push(`
+        (LOWER(d.first_name || '') LIKE LOWER($${paramIndex}) OR 
+         LOWER(d.last_name || '') LIKE LOWER($${paramIndex}) OR 
+         LOWER(CONCAT(d.first_name, ' ', d.last_name)) LIKE LOWER($${paramIndex}) OR
+         LOWER(d.department || '') LIKE LOWER($${paramIndex}) OR 
+         LOWER(d.shift || '') LIKE LOWER($${paramIndex}))
+      `);
+      values.push(`%${searchText}%`);
+      paramIndex += 1;
+    }
 
-    // Calculate total employees based on filters
-    let totalEmployees = Object.keys(employeeData).length;
+    // Build the WHERE clause
+    let whereClause = '';
+    if (whereConditions.length > 0) {
+      whereClause = 'WHERE ' + whereConditions.join(' AND ');
+    }
+
+    // Get total employees count
+    let totalEmployeesQuery = 'SELECT COUNT(*) FROM details';
+    let totalEmployeesValues: any[] = [];
+    let totalEmployeesConditions: string[] = [];
+
+    // Apply same filters to total employees count
+    if (departments.length > 0) {
+      const deptConditions = departments.map((_, index) => `department = $${index + 1}`);
+      totalEmployeesConditions.push(`(${deptConditions.join(' OR ')})`);
+      totalEmployeesValues.push(...departments);
+    }
+
+    if (shift && shift !== 'all') {
+      totalEmployeesConditions.push(`LOWER(shift) = LOWER($${totalEmployeesValues.length + 1})`);
+      totalEmployeesValues.push(shift);
+    }
+
+    if (searchText) {
+      totalEmployeesConditions.push(`
+        (LOWER(first_name || '') LIKE LOWER($${totalEmployeesValues.length + 1}) OR 
+         LOWER(last_name || '') LIKE LOWER($${totalEmployeesValues.length + 1}) OR 
+         LOWER(CONCAT(first_name, ' ', last_name)) LIKE LOWER($${totalEmployeesValues.length + 1}) OR
+         LOWER(department || '') LIKE LOWER($${totalEmployeesValues.length + 1}) OR 
+         LOWER(shift || '') LIKE LOWER($${totalEmployeesValues.length + 1}))
+      `);
+      totalEmployeesValues.push(`%${searchText}%`);
+    }
+
+    if (totalEmployeesConditions.length > 0) {
+      totalEmployeesQuery += ' WHERE ' + totalEmployeesConditions.join(' AND ');
+    }
+
+    const totalEmployeesResult = await pool.query(totalEmployeesQuery, totalEmployeesValues);
+    const totalEmployees = parseInt(totalEmployeesResult.rows[0].count);
+
+    // Get attendance data with JOIN
+    const attendanceQuery = `
+      SELECT DISTINCT t.id, d.department, d.shift
+      ${baseQuery} 
+      ${whereClause}
+    `;
     
-    // If filters are applied, calculate total based on filtered employee pool
-    if (departments.length > 0 || shift !== 'all' || searchText) {
-      totalEmployees = Object.values(employeeData).filter((employee: EmployeeData) => {
-        // Apply department filter
-        if (departments.length > 0 && !departments.includes(employee.Department)) {
-          return false;
-        }
-        
-        // Apply shift filter
-        if (shift && shift !== 'all' && employee.Shift?.toLowerCase() !== shift.toLowerCase()) {
-          return false;
-        }
-        
-        // Apply search filter
-        if (searchText) {
-          const searchLower = searchText.toLowerCase();
-          const fullName = `${employee['First Name']} ${employee['Last Name']}`.toLowerCase();
-          if (!fullName.includes(searchLower) && 
-              !employee.Department.toLowerCase().includes(searchLower) &&
-              !employee.Shift.toLowerCase().includes(searchLower)) {
-            return false;
-          }
-        }
-        
-        return true;
-      }).length;
-    }
+    const result = await pool.query(attendanceQuery, values);
     
     // Get unique employee IDs from filtered attendance records (present employees)
-    const presentEmployeeIds = new Set(filteredRows.map((row: any) => row.id?.toString()));
+    const presentEmployeeIds = new Set(result.rows.map((row: any) => row.id?.toString()));
     const presentCount = presentEmployeeIds.size;
     const absentCount = totalEmployees - presentCount;
     const attendanceRate = totalEmployees > 0 ? ((presentCount / totalEmployees) * 100).toFixed(2) : '0.00';
 
     // Calculate department distribution from filtered data
     const deptDistribution: { [key: string]: number } = {};
-    filteredRows.forEach((row: any) => {
-      const employeeId = row.id?.toString() || '';
-      const employee = employeeData[employeeId];
-      if (employee?.Department) {
-        const dept = employee.Department;
+    result.rows.forEach((row: any) => {
+      if (row.department) {
+        const dept = row.department;
         deptDistribution[dept] = (deptDistribution[dept] || 0) + 1;
       }
     });
 
     // Calculate shift distribution from filtered data
     const shiftDistribution: { [key: string]: number } = {};
-    filteredRows.forEach((row: any) => {
-      const employeeId = row.id?.toString() || '';
-      const employee = employeeData[employeeId];
-      if (employee?.Shift) {
-        const shift = employee.Shift;
+    result.rows.forEach((row: any) => {
+      if (row.shift) {
+        const shift = row.shift;
         // Normalize shift names
         const normalizedShift = shift.toLowerCase() === 'day' ? 'Day' : 
                                shift.toLowerCase() === 'night' ? 'Night' : 

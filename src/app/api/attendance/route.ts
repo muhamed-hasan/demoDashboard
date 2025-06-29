@@ -1,18 +1,5 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import fs from 'fs';
-import path from 'path';
-
-interface EmployeeData {
-  'First Name': string;
-  'Last Name': string;
-  'Department': string;
-  'Shift': string;
-}
-
-interface EmployeeRecord {
-  [key: string]: EmployeeData;
-}
 
 // Function to format time to show only day and time
 function formatTime(dateTimeString: string): string {
@@ -43,77 +30,107 @@ export async function GET(request: Request) {
     const shift = searchParams.get('shift');
     const searchQuery = searchParams.get('q');
 
-    // Load employee data from JSON file
-    const jsonFilePath = path.join(process.cwd(), 'public', 'data.json');
-    const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
-    const employeeData: EmployeeRecord = JSON.parse(jsonData);
-
-    // Build SQL query with filters
-    let query = 'SELECT * FROM table3';
-    const values: string[] = [];
-    const conditions: string[] = [];
+    // Build the JOIN query with filters
+    let baseQuery = `
+      FROM table3 t
+      LEFT JOIN details d ON t.id = d.id::text
+    `;
+    let whereConditions: string[] = [];
+    let values: any[] = [];
+    let paramIndex = 1;
 
     // Date range filter
     if (startDate && endDate) {
-      conditions.push('DATE(time) >= $' + (values.length + 1) + ' AND DATE(time) <= $' + (values.length + 2));
+      whereConditions.push(`DATE(t.time) >= $${paramIndex} AND DATE(t.time) <= $${paramIndex + 1}`);
       values.push(startDate, endDate);
+      paramIndex += 2;
     } else if (startDate) {
-      conditions.push('DATE(time) >= $' + (values.length + 1));
+      whereConditions.push(`DATE(t.time) >= $${paramIndex}`);
       values.push(startDate);
+      paramIndex += 1;
     } else if (endDate) {
-      conditions.push('DATE(time) <= $' + (values.length + 1));
+      whereConditions.push(`DATE(t.time) <= $${paramIndex}`);
       values.push(endDate);
+      paramIndex += 1;
     }
 
-    // Apply WHERE clause if we have conditions
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
+    // Department filter
+    if (department) {
+      whereConditions.push(`LOWER(d.department || '') LIKE LOWER($${paramIndex})`);
+      values.push(`%${department}%`);
+      paramIndex += 1;
     }
 
-    query += ' ORDER BY time DESC';
+    // Shift filter
+    if (shift) {
+      whereConditions.push(`LOWER(d.shift || '') LIKE LOWER($${paramIndex})`);
+      values.push(`%${shift}%`);
+      paramIndex += 1;
+    }
+
+    // Search filter
+    if (searchQuery) {
+      whereConditions.push(`
+        (LOWER(d.first_name || '') LIKE LOWER($${paramIndex}) OR 
+         LOWER(d.last_name || '') LIKE LOWER($${paramIndex}) OR 
+         LOWER(CONCAT(d.first_name, ' ', d.last_name)) LIKE LOWER($${paramIndex}) OR
+         LOWER(d.department || '') LIKE LOWER($${paramIndex}) OR 
+         LOWER(d.shift || '') LIKE LOWER($${paramIndex}))
+      `);
+      values.push(`%${searchQuery}%`);
+      paramIndex += 1;
+    }
+
+    // Build the WHERE clause
+    let whereClause = '';
+    if (whereConditions.length > 0) {
+      whereClause = 'WHERE ' + whereConditions.join(' AND ');
+    }
+
+    // Get data with JOIN
+    const query = `
+      SELECT 
+        t.id,
+        t.time,
+        t.date,
+        t.time2,
+        t.fname,
+        t.lname,
+        t.name,
+        t.rname,
+        t.group,
+        t.card_number,
+        t.pic,
+        t.dev,
+        d.first_name,
+        d.last_name,
+        d.department,
+        d.shift
+      ${baseQuery} 
+      ${whereClause} 
+      ORDER BY t.time DESC
+    `;
     
     const result = await pool.query(query, values);
     
-    // Enrich database records with employee information and apply filters
-    let enrichedData = result.rows.map((row: any) => {
-      const employeeId = row.id?.toString() || '';
-      const employee = employeeData[employeeId];
-      
+    // Format the data
+    const enrichedData = result.rows.map((row: any) => {
       return {
         id: row.id,
         date: row.date || new Date(row.time).toISOString().split('T')[0],
         time: formatTime(row.time),
-        fullName: employee ? `${employee['First Name']} ${employee['Last Name']}`.trim() : '',
-        firstName: employee?.['First Name'] || '',
-        lastName: employee?.['Last Name'] || '',
-        shift: employee?.['Shift'] || '',
-        department: employee?.['Department'] || '',
+        fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
+        firstName: row.first_name || row.fname || '',
+        lastName: row.last_name || row.lname || '',
+        shift: row.shift || '',
+        department: row.department || row.group || '',
+        // Additional fields from table3
+        time2: row.time2,
+        rname: row.rname,
+        card_number: row.card_number,
+        dev: row.dev
       };
     });
-
-    // Apply client-side filters for department, shift, and search query
-    if (department) {
-      enrichedData = enrichedData.filter(record => 
-        record.department.toLowerCase().includes(department.toLowerCase())
-      );
-    }
-
-    if (shift) {
-      enrichedData = enrichedData.filter(record => 
-        record.shift.toLowerCase().includes(shift.toLowerCase())
-      );
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      enrichedData = enrichedData.filter(record => 
-        record.fullName.toLowerCase().includes(query) ||
-        record.firstName.toLowerCase().includes(query) ||
-        record.lastName.toLowerCase().includes(query) ||
-        record.department.toLowerCase().includes(query) ||
-        record.shift.toLowerCase().includes(query)
-      );
-    }
     
     return NextResponse.json(enrichedData);
   } catch (error) {

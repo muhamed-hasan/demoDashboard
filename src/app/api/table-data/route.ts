@@ -1,18 +1,5 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import fs from 'fs';
-import path from 'path';
-
-interface EmployeeData {
-  'First Name': string;
-  'Last Name': string;
-  'Department': string;
-  'Shift': string;
-}
-
-interface EmployeeRecord {
-  [key: string]: EmployeeData;
-}
 
 // Function to format time to show only day and time
 function formatTime(dateTimeString: string): string {
@@ -46,26 +33,48 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
 
-    // Build the base query with filters
-    let baseQuery = 'FROM table3';
+    // Build the JOIN query with filters
+    let baseQuery = `
+      FROM table3 t
+      LEFT JOIN details d ON t.id = d.id::text
+    `;
     let whereConditions: string[] = [];
     let values: any[] = [];
     let paramIndex = 1;
 
+    // Date range filter
     if (startDate && endDate) {
-      whereConditions.push(`DATE(time) >= $${paramIndex} AND DATE(time) <= $${paramIndex + 1}`);
+      whereConditions.push(`DATE(t.time) >= $${paramIndex} AND DATE(t.time) <= $${paramIndex + 1}`);
       values.push(startDate, endDate);
       paramIndex += 2;
     }
 
-    // Add department filter to database query if specified
+    // Department filter
     if (departments.length > 0) {
-      // We'll filter by department after joining with employee data
+      const deptConditions = departments.map((_, index) => `d.department = $${paramIndex + index}`);
+      whereConditions.push(`(${deptConditions.join(' OR ')})`);
+      values.push(...departments);
+      paramIndex += departments.length;
     }
 
-    // Add search filter to database query if specified
+    // Shift filter
+    if (shift && shift !== 'all') {
+      whereConditions.push(`LOWER(d.shift) = LOWER($${paramIndex})`);
+      values.push(shift);
+      paramIndex += 1;
+    }
+
+    // Search filter
     if (searchText) {
-      // We'll filter by search after joining with employee data
+      whereConditions.push(`
+        (LOWER(d.first_name || '') LIKE LOWER($${paramIndex}) OR 
+         LOWER(d.last_name || '') LIKE LOWER($${paramIndex}) OR 
+         LOWER(CONCAT(d.first_name, ' ', d.last_name)) LIKE LOWER($${paramIndex}) OR
+         LOWER(d.department || '') LIKE LOWER($${paramIndex}) OR 
+         LOWER(d.shift || '') LIKE LOWER($${paramIndex}))
+      `);
+      values.push(`%${searchText}%`);
+      paramIndex += 1;
     }
 
     // Build the WHERE clause
@@ -75,61 +84,56 @@ export async function GET(request: Request) {
     }
 
     // Get total count for pagination
-    const countQuery = `SELECT COUNT(*) ${baseQuery} ${whereClause}`;
+    const countQuery = `
+      SELECT COUNT(DISTINCT t.id) ${baseQuery} ${whereClause}
+    `;
     const countResult = await pool.query(countQuery, values);
     const totalCount = parseInt(countResult.rows[0].count);
 
-    // Get paginated data
+    // Get paginated data with JOIN
     const dataQuery = `
-      SELECT * ${baseQuery} 
+      SELECT 
+        t.id,
+        t.time,
+        t.date,
+        t.time2,
+        t.fname,
+        t.lname,
+        t.name,
+        t.rname,
+        t.group,
+        t.card_number,
+        t.pic,
+        t.dev,
+        d.first_name,
+        d.last_name,
+        d.department,
+        d.shift
+      ${baseQuery} 
       ${whereClause} 
-      ORDER BY time DESC 
+      ORDER BY t.time DESC 
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     values.push(limit, offset);
     
     const result = await pool.query(dataQuery, values);
     
-    // Load employee data from JSON file
-    const jsonFilePath = path.join(process.cwd(), 'public', 'data.json');
-    const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
-    const employeeData: EmployeeRecord = JSON.parse(jsonData);
-    
-    // Enrich database records with employee information
-    let enrichedData = result.rows.map((row: any) => {
-      const employeeId = row.id?.toString() || '';
-      const employee = employeeData[employeeId];
-      
+    // Format the data
+    const enrichedData = result.rows.map((row: any) => {
       return {
         id: row.id,
-        time: formatTime(row.time), // Format time to show day and time only
-        fullName: employee ? `${employee['First Name']} ${employee['Last Name']}`.trim() : '',
-        shift: employee?.['Shift'] || '',
-        department: employee?.['Department'] || '',
+        time: formatTime(row.time),
+        fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
+        shift: row.shift || '',
+        department: row.department || row.group || '',
+        // Additional fields from table3
+        date: row.date,
+        time2: row.time2,
+        rname: row.rname,
+        card_number: row.card_number,
+        dev: row.dev
       };
     });
-    
-    // Apply client-side filters that couldn't be done at database level
-    if (departments.length > 0) {
-      enrichedData = enrichedData.filter(item => 
-        departments.includes(item.department)
-      );
-    }
-    
-    if (shift && shift !== 'all') {
-      enrichedData = enrichedData.filter(item => 
-        item.shift?.toLowerCase() === shift.toLowerCase()
-      );
-    }
-    
-    if (searchText) {
-      const searchLower = searchText.toLowerCase();
-      enrichedData = enrichedData.filter(item => 
-        item.fullName.toLowerCase().includes(searchLower) ||
-        item.department.toLowerCase().includes(searchLower) ||
-        item.shift.toLowerCase().includes(searchLower)
-      );
-    }
     
     // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limit);
