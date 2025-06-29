@@ -39,6 +39,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const departments = searchParams.getAll('department');
+    const shift = searchParams.get('shift');
+    const searchText = searchParams.get('search');
 
     // Fetch data from database
     let query = 'SELECT * FROM table3';
@@ -58,7 +61,7 @@ export async function GET(request: Request) {
     const employeeData: EmployeeRecord = JSON.parse(jsonData);
     
     // Enrich database records with employee information
-    const enrichedData = result.rows.map((row: any) => {
+    let enrichedData = result.rows.map((row: any) => {
       const employeeId = row.id?.toString() || '';
       const employee = employeeData[employeeId];
       
@@ -70,6 +73,28 @@ export async function GET(request: Request) {
         department: employee?.['Department'] || '',
       };
     });
+    
+    // Apply client-side filters
+    if (departments.length > 0) {
+      enrichedData = enrichedData.filter(item => 
+        departments.includes(item.department)
+      );
+    }
+    
+    if (shift && shift !== 'all') {
+      enrichedData = enrichedData.filter(item => 
+        item.shift?.toLowerCase() === shift.toLowerCase()
+      );
+    }
+    
+    if (searchText) {
+      const searchLower = searchText.toLowerCase();
+      enrichedData = enrichedData.filter(item => 
+        item.fullName.toLowerCase().includes(searchLower) ||
+        item.department.toLowerCase().includes(searchLower) ||
+        item.shift.toLowerCase().includes(searchLower)
+      );
+    }
     
     return NextResponse.json(enrichedData);
   } catch (error) {

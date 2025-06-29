@@ -19,6 +19,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('start');
     const endDate = searchParams.get('end');
+    const departments = searchParams.getAll('department');
+    const shift = searchParams.get('shift');
+    const searchText = searchParams.get('search');
 
     // Load employee data from JSON file
     const jsonFilePath = path.join(process.cwd(), 'public', 'data.json');
@@ -49,18 +52,77 @@ export async function GET(request: Request) {
 
     const result = await pool.query(query, values);
 
-    // Get all unique employee IDs from the data
-    const totalEmployees = Object.keys(employeeData).length;
+    // Filter the results based on employee data
+    let filteredRows = result.rows.filter((row: any) => {
+      const employeeId = row.id?.toString() || '';
+      const employee = employeeData[employeeId];
+      
+      if (!employee) return false;
+      
+      // Apply department filter
+      if (departments.length > 0 && !departments.includes(employee.Department)) {
+        return false;
+      }
+      
+      // Apply shift filter
+      if (shift && shift !== 'all' && employee.Shift?.toLowerCase() !== shift.toLowerCase()) {
+        return false;
+      }
+      
+      // Apply search filter
+      if (searchText) {
+        const searchLower = searchText.toLowerCase();
+        const fullName = `${employee['First Name']} ${employee['Last Name']}`.toLowerCase();
+        if (!fullName.includes(searchLower) && 
+            !employee.Department.toLowerCase().includes(searchLower) &&
+            !employee.Shift.toLowerCase().includes(searchLower)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+
+    // Calculate total employees based on filters
+    let totalEmployees = Object.keys(employeeData).length;
     
-    // Get unique employee IDs from attendance records (present employees)
-    const presentEmployeeIds = new Set(result.rows.map((row: any) => row.id?.toString()));
+    // If filters are applied, calculate total based on filtered employee pool
+    if (departments.length > 0 || shift !== 'all' || searchText) {
+      totalEmployees = Object.values(employeeData).filter((employee: EmployeeData) => {
+        // Apply department filter
+        if (departments.length > 0 && !departments.includes(employee.Department)) {
+          return false;
+        }
+        
+        // Apply shift filter
+        if (shift && shift !== 'all' && employee.Shift?.toLowerCase() !== shift.toLowerCase()) {
+          return false;
+        }
+        
+        // Apply search filter
+        if (searchText) {
+          const searchLower = searchText.toLowerCase();
+          const fullName = `${employee['First Name']} ${employee['Last Name']}`.toLowerCase();
+          if (!fullName.includes(searchLower) && 
+              !employee.Department.toLowerCase().includes(searchLower) &&
+              !employee.Shift.toLowerCase().includes(searchLower)) {
+            return false;
+          }
+        }
+        
+        return true;
+      }).length;
+    }
+    
+    // Get unique employee IDs from filtered attendance records (present employees)
+    const presentEmployeeIds = new Set(filteredRows.map((row: any) => row.id?.toString()));
     const presentCount = presentEmployeeIds.size;
     const absentCount = totalEmployees - presentCount;
     const attendanceRate = totalEmployees > 0 ? ((presentCount / totalEmployees) * 100).toFixed(2) : '0.00';
 
-    // Calculate department distribution
+    // Calculate department distribution from filtered data
     const deptDistribution: { [key: string]: number } = {};
-    result.rows.forEach((row: any) => {
+    filteredRows.forEach((row: any) => {
       const employeeId = row.id?.toString() || '';
       const employee = employeeData[employeeId];
       if (employee?.Department) {
@@ -69,9 +131,9 @@ export async function GET(request: Request) {
       }
     });
 
-    // Calculate shift distribution
+    // Calculate shift distribution from filtered data
     const shiftDistribution: { [key: string]: number } = {};
-    result.rows.forEach((row: any) => {
+    filteredRows.forEach((row: any) => {
       const employeeId = row.id?.toString() || '';
       const employee = employeeData[employeeId];
       if (employee?.Shift) {

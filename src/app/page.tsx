@@ -20,6 +20,8 @@ import {
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { FilterProvider, FilterContextType } from '@/contexts/FilterContext';
+import AttendanceTable, { AttendanceData } from '@/components/AttendanceTable';
+import { useAttendanceData } from '@/hooks/useAttendanceData';
 
 // Register Chart.js components
 ChartJS.register(
@@ -56,6 +58,19 @@ export default function Home() {
   const [refreshTrigger] = useState(0);
   const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
   const [availableShifts, setAvailableShifts] = useState<string[]>([]);
+
+  // Fetch detailed attendance data
+  const {
+    data: attendanceData,
+    loading: attendanceLoading,
+    error: attendanceError
+  } = useAttendanceData({
+    startDate,
+    endDate,
+    departments: selectedDepartments,
+    shift: selectedShift,
+    search: searchText,
+  });
 
   const columnHelper = createColumnHelper<TableData>();
 
@@ -113,6 +128,18 @@ export default function Home() {
         start: startDate,
         end: endDate,
       });
+      
+      // Add filter parameters to stats API
+      if (selectedDepartments.length > 0) {
+        selectedDepartments.forEach(dept => params.append('department', dept));
+      }
+      if (selectedShift && selectedShift !== 'all') {
+        params.append('shift', selectedShift);
+      }
+      if (searchText) {
+        params.append('search', searchText);
+      }
+      
       const response = await fetch(`/api/stats?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch stats');
@@ -120,17 +147,19 @@ export default function Home() {
       const result = await response.json();
       setStats(result);
       
-      // Update available departments and shifts
-      if (result.deptDistribution) {
-        setAvailableDepartments(Object.keys(result.deptDistribution));
-      }
-      if (result.shiftDistribution) {
-        setAvailableShifts(Object.keys(result.shiftDistribution));
+      // Update available departments and shifts only when no filters are applied
+      if (selectedDepartments.length === 0 && selectedShift === 'all' && !searchText) {
+        if (result.deptDistribution) {
+          setAvailableDepartments(Object.keys(result.deptDistribution));
+        }
+        if (result.shiftDistribution) {
+          setAvailableShifts(Object.keys(result.shiftDistribution));
+        }
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
     }
-  }, [startDate, endDate]);
+  }, [startDate, endDate, selectedDepartments, selectedShift, searchText]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,6 +197,33 @@ export default function Home() {
     fetchData();
     fetchStats();
   }, [startDate, endDate, selectedDepartments, selectedShift, searchText, refreshTrigger, fetchStats]);
+
+  // Fetch initial data for departments and shifts on component mount
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const params = new URLSearchParams({
+          start: today,
+          end: today,
+        });
+        const response = await fetch(`/api/stats?${params}`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.deptDistribution) {
+            setAvailableDepartments(Object.keys(result.deptDistribution));
+          }
+          if (result.shiftDistribution) {
+            setAvailableShifts(Object.keys(result.shiftDistribution));
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching initial data:', err);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
 
   if (loading && data.length === 0) {
     return (
@@ -490,6 +546,38 @@ export default function Home() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Detailed Attendance Table Section */}
+          <div className="mt-8">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-4">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                Detailed Attendance Records
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Complete attendance information with sorting and pagination
+              </p>
+            </div>
+            
+            {attendanceError && (
+              <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4">
+                <div className="flex">
+                  <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-800 dark:text-red-200">
+                      Error loading attendance data: {attendanceError}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <AttendanceTable 
+              data={attendanceData} 
+              loading={attendanceLoading} 
+            />
           </div>
         </div>
       </div>
