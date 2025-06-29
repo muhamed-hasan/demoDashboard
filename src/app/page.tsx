@@ -55,6 +55,7 @@ export default function Home() {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedShift, setSelectedShift] = useState<string>('all');
   const [searchText, setSearchText] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [refreshTrigger] = useState(0);
   const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
   const [availableShifts, setAvailableShifts] = useState<string[]>([]);
@@ -69,7 +70,7 @@ export default function Home() {
     endDate,
     departments: selectedDepartments,
     shift: selectedShift,
-    search: searchText,
+    search: searchQuery,
   });
 
   const columnHelper = createColumnHelper<TableData>();
@@ -136,8 +137,8 @@ export default function Home() {
       if (selectedShift && selectedShift !== 'all') {
         params.append('shift', selectedShift);
       }
-      if (searchText) {
-        params.append('search', searchText);
+      if (searchQuery) {
+        params.append('search', searchQuery);
       }
       
       const response = await fetch(`/api/stats?${params}`);
@@ -148,7 +149,7 @@ export default function Home() {
       setStats(result);
       
       // Update available departments and shifts only when no filters are applied
-      if (selectedDepartments.length === 0 && selectedShift === 'all' && !searchText) {
+      if (selectedDepartments.length === 0 && selectedShift === 'all' && !searchQuery) {
         if (result.deptDistribution) {
           setAvailableDepartments(Object.keys(result.deptDistribution));
         }
@@ -159,7 +160,7 @@ export default function Home() {
     } catch (err) {
       console.error('Error fetching stats:', err);
     }
-  }, [startDate, endDate, selectedDepartments, selectedShift, searchText]);
+  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -177,8 +178,8 @@ export default function Home() {
         if (selectedShift && selectedShift !== 'all') {
           params.append('shift', selectedShift);
         }
-        if (searchText) {
-          params.append('search', searchText);
+        if (searchQuery) {
+          params.append('search', searchQuery);
         }
         
         const response = await fetch(`/api/table-data?${params}`);
@@ -196,7 +197,7 @@ export default function Home() {
 
     fetchData();
     fetchStats();
-  }, [startDate, endDate, selectedDepartments, selectedShift, searchText, refreshTrigger, fetchStats]);
+  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, refreshTrigger, fetchStats]);
 
   // Fetch initial data for departments and shifts on component mount
   useEffect(() => {
@@ -239,6 +240,11 @@ export default function Home() {
 
     fetchInitialData();
   }, []);
+
+  // Handle search button click
+  const handleSearch = () => {
+    setSearchQuery(searchText);
+  };
 
   if (loading && data.length === 0) {
     return (
@@ -499,13 +505,28 @@ export default function Home() {
               {/* Search Input */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
-                <input
-                  type="text"
-                  placeholder="Search by name..."
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
+                <div className="flex">
+                  <input
+                    type="text"
+                    placeholder="Search by name..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSearch();
+                      }
+                    }}
+                    className="w-full rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                  <button
+                    onClick={handleSearch}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-700 dark:hover:bg-indigo-800"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
