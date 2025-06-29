@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from '@/components/Sidebar';
-import { FaBell, FaCog, FaSearch } from 'react-icons/fa';
+import { FaCog } from 'react-icons/fa';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,23 +34,8 @@ export default function RootLayout({
           <div className="flex-1 flex flex-col min-h-screen pl-64">
             {/* Header */}
             <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200 flex items-center justify-between px-8 py-4 shadow-sm">
-              <div className="flex items-center gap-3 w-1/2">
-                <div className="relative w-full">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <FaSearch />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Type to search..."
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  />
-                </div>
-              </div>
+              <div></div>
               <div className="flex items-center gap-6">
-                <button className="relative p-2 rounded-full hover:bg-indigo-100 text-indigo-600">
-                  <FaBell className="text-lg" />
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
                 <button className="p-2 rounded-full hover:bg-indigo-100 text-indigo-600">
                   <FaCog className="text-lg" />
                 </button>

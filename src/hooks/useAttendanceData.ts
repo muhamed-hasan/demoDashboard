@@ -21,6 +21,12 @@ export const useAttendanceData = ({
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (!startDate || !endDate || startDate.length < 10 || endDate.length < 10) {
+      setData([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
