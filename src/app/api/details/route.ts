@@ -1,21 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import pool from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 
-// Create a new pool instance
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
 export async function POST(request: NextRequest) {
   try {
+    console.log('Starting details table creation...');
+    
     // Read data.json file
     const dataPath = path.join(process.cwd(), 'public', 'data.json');
+    console.log('Reading file from:', dataPath);
+    
+    if (!fs.existsSync(dataPath)) {
+      throw new Error(`File not found: ${dataPath}`);
+    }
+    
     const dataContent = fs.readFileSync(dataPath, 'utf-8');
     const employeesData = JSON.parse(dataContent);
+    console.log('Successfully read data.json, found', Object.keys(employeesData).length, 'employees');
+
+    // Test database connection
+    console.log('Testing database connection...');
+    await pool.query('SELECT 1');
+    console.log('Database connection successful');
 
     // Create details table
+    console.log('Creating details table...');
     await pool.query(`
       CREATE TABLE IF NOT EXISTS details (
         id INTEGER PRIMARY KEY,
@@ -25,11 +35,15 @@ export async function POST(request: NextRequest) {
         shift VARCHAR(50)
       )
     `);
+    console.log('Table created successfully');
 
     // Clear existing data
+    console.log('Clearing existing data...');
     await pool.query('DELETE FROM details');
+    console.log('Existing data cleared');
 
     // Insert data from data.json
+    console.log('Inserting data...');
     let insertedCount = 0;
     for (const [id, employee] of Object.entries(employeesData)) {
       const employeeData = employee as any;
@@ -41,6 +55,7 @@ export async function POST(request: NextRequest) {
       
       insertedCount++;
     }
+    console.log('Data insertion completed, inserted', insertedCount, 'records');
 
     return NextResponse.json({
       success: true,
@@ -54,7 +69,8 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         error: 'حدث خطأ أثناء إنشاء الجدول أو إدخال البيانات',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     );
