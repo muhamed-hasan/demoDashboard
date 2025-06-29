@@ -11,4 +11,10 @@ export interface TableData {
   card_number: string;
   pic: string | null;
   dev: string;
-} 
+  // Employee data from JSON file
+  firstName: string;
+  lastName: string;
+  department: string;
+  shift: string;
+  fullName: string;
+}
