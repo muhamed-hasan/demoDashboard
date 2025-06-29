@@ -54,13 +54,6 @@ export default function RootLayout({
                 <button className="p-2 rounded-full hover:bg-indigo-100 text-indigo-600">
                   <FaCog className="text-lg" />
                 </button>
-                <div className="flex items-center gap-2">
-                  <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" className="w-9 h-9 rounded-full border-2 border-indigo-200 shadow" />
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-gray-800 text-sm">Thomas Anree</span>
-                    <span className="text-xs text-gray-400">UX Designer</span>
-                  </div>
-                </div>
               </div>
             </header>
             <main className="flex-1 px-8 py-8">
