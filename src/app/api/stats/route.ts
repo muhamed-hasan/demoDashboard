@@ -35,13 +35,13 @@ export async function GET(request: Request) {
 
     // Date range filter
     if (startDate && endDate) {
-      conditions.push('date >= $' + (values.length + 1) + ' AND date <= $' + (values.length + 2));
+      conditions.push('DATE(time) >= $' + (values.length + 1) + ' AND DATE(time) <= $' + (values.length + 2));
       values.push(startDate, endDate);
     } else if (startDate) {
-      conditions.push('date >= $' + (values.length + 1));
+      conditions.push('DATE(time) >= $' + (values.length + 1));
       values.push(startDate);
     } else if (endDate) {
-      conditions.push('date <= $' + (values.length + 1));
+      conditions.push('DATE(time) <= $' + (values.length + 1));
       values.push(endDate);
     }
 

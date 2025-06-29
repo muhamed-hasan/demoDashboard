@@ -91,8 +91,8 @@ export async function GET(request: NextRequest) {
       SELECT 
         id,
         DATE(time) as date,
-        MIN(CASE WHEN time::time < '12:00:00' THEN time END) as first_login,
-        MAX(CASE WHEN time::time >= '12:00:00' THEN time END) as last_logout
+        MIN(CASE WHEN EXTRACT(HOUR FROM time) < 12 THEN time END) as first_login,
+        MAX(CASE WHEN EXTRACT(HOUR FROM time) >= 12 THEN time END) as last_logout
       FROM table3 
       WHERE DATE(time) = $1
       GROUP BY id, DATE(time)

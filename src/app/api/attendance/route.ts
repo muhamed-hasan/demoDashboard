@@ -55,13 +55,13 @@ export async function GET(request: Request) {
 
     // Date range filter
     if (startDate && endDate) {
-      conditions.push('date >= $' + (values.length + 1) + ' AND date <= $' + (values.length + 2));
+      conditions.push('DATE(time) >= $' + (values.length + 1) + ' AND DATE(time) <= $' + (values.length + 2));
       values.push(startDate, endDate);
     } else if (startDate) {
-      conditions.push('date >= $' + (values.length + 1));
+      conditions.push('DATE(time) >= $' + (values.length + 1));
       values.push(startDate);
     } else if (endDate) {
-      conditions.push('date <= $' + (values.length + 1));
+      conditions.push('DATE(time) <= $' + (values.length + 1));
       values.push(endDate);
     }
 
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
       
       return {
         id: row.id,
-        date: row.date,
+        date: row.date || new Date(row.time).toISOString().split('T')[0],
         time: formatTime(row.time),
         fullName: employee ? `${employee['First Name']} ${employee['Last Name']}`.trim() : '',
         firstName: employee?.['First Name'] || '',

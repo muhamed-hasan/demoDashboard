@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     let paramIndex = 1;
 
     if (startDate && endDate) {
-      whereConditions.push(`date >= $${paramIndex} AND date <= $${paramIndex + 1}`);
+      whereConditions.push(`DATE(time) >= $${paramIndex} AND DATE(time) <= $${paramIndex + 1}`);
       values.push(startDate, endDate);
       paramIndex += 2;
     }
