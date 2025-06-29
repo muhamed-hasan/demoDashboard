@@ -8,6 +8,7 @@ interface EmployeeData {
   'First Name': string;
   'Last Name': string;
   Department: string;
+  Shift: string;
 }
 
 // Simple UI Components (since we don't have the actual components)
@@ -53,12 +54,13 @@ const DataForm: React.FC<{
     'First Name': initialData?.['First Name'] || '',
     'Last Name': initialData?.['Last Name'] || '',
     Department: initialData?.Department || '',
+    Shift: initialData?.Shift || 'Day',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
-    setFormData({ id: '', 'First Name': '', 'Last Name': '', Department: '' });
+    setFormData({ id: '', 'First Name': '', 'Last Name': '', Department: '', Shift: 'Day' });
   };
 
   return (
@@ -103,6 +105,18 @@ const DataForm: React.FC<{
           required
         />
       </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Shift</label>
+        <select
+          value={formData.Shift}
+          onChange={e => setFormData({ ...formData, Shift: e.target.value })}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          required
+        >
+          <option value="Day">صباحي</option>
+          <option value="Night">مسائي</option>
+        </select>
+      </div>
       <button
         type="submit"
         className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -126,8 +140,8 @@ export default function DataManagementPage() {
       .catch(error => {
         console.error('Error fetching data:', error);
         setData([
-          { id: '1', 'First Name': 'John', 'Last Name': 'Doe', Department: 'IT' },
-          { id: '2', 'First Name': 'Jane', 'Last Name': 'Smith', Department: 'HR' },
+          { id: '1', 'First Name': 'John', 'Last Name': 'Doe', Department: 'IT', Shift: 'Day' },
+          { id: '2', 'First Name': 'Jane', 'Last Name': 'Smith', Department: 'HR', Shift: 'Day' },
         ]);
       });
   }, []);
@@ -195,6 +209,7 @@ export default function DataManagementPage() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">First Name</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Name</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
@@ -205,6 +220,7 @@ export default function DataManagementPage() {
               <TableCell>{item['First Name']}</TableCell>
               <TableCell>{item['Last Name']}</TableCell>
               <TableCell>{item.Department}</TableCell>
+              <TableCell>{item.Shift === 'Night' ? 'مسائي' : 'صباحي'}</TableCell>
               <TableCell>
                 <Button onClick={() => setEditItem(item)}>تعديل</Button>
                 <Button onClick={() => handleDelete(item.id)}>حذف</Button>

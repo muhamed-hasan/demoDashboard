@@ -60,6 +60,8 @@ export default function Home() {
   const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
   const [availableShifts, setAvailableShifts] = useState<string[]>([]);
   const [uniquePerDay, setUniquePerDay] = useState(false);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Fetch detailed attendance data
   const {
@@ -100,6 +102,10 @@ export default function Home() {
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+
+  // حساب البيانات المعروضة في الصفحة الحالية
+  const paginatedData = filteredData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
   const handleDateRangeChange = (range: 'today' | 'week' | 'month' | 'year' | 'custom') => {
     const today = new Date();
@@ -568,9 +574,53 @@ export default function Home() {
               )}
               
               {/* Table */}
+              <div className="flex items-center justify-between mb-2 mt-4">
+                <div>
+                  <label className="mr-2 text-sm font-medium">Rows per page:</label>
+                  <select
+                    value={rowsPerPage}
+                    onChange={e => {
+                      setRowsPerPage(Number(e.target.value));
+                      setPage(1);
+                    }}
+                    className="rounded-md border-gray-300 px-2 py-1 text-sm shadow focus:ring-2 focus:ring-blue-400 transition"
+                  >
+                    <option value={10}>10</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="w-8 h-8 flex items-center justify-center rounded-full border bg-gray-100 dark:bg-gray-700 text-sm disabled:opacity-50 transition"
+                  >
+                    &#8592;
+                  </button>
+                  {/* أرقام الصفحات */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setPage(n)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-full border transition
+                        ${page === n ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="w-8 h-8 flex items-center justify-center rounded-full border bg-gray-100 dark:bg-gray-700 text-sm disabled:opacity-50 transition"
+                  >
+                    &#8594;
+                  </button>
+                </div>
+              </div>
               <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
+                <table className="min-w-full rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                  <thead className="bg-gradient-to-r from-blue-100 to-blue-50 dark:from-gray-800 dark:to-gray-900">
                     {table.getHeaderGroups().map((headerGroup) => (
                       <tr key={headerGroup.id}>
                         {headerGroup.headers.map((header) => (
@@ -589,8 +639,8 @@ export default function Home() {
                       </tr>
                     ))}
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {data.length === 0 ? (
+                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
+                    {paginatedData.length === 0 ? (
                       <tr>
                         <td 
                           colSpan={columns.length} 
@@ -600,14 +650,14 @@ export default function Home() {
                         </td>
                       </tr>
                     ) : (
-                      table.getRowModel().rows.map((row) => (
-                        <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          {row.getVisibleCells().map((cell) => (
+                      paginatedData.map((row, idx) => (
+                        <tr key={row.id || idx} className="hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors duration-150">
+                          {table.getAllColumns().map((col) => (
                             <td
-                              key={cell.id}
+                              key={col.id}
                               className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
                             >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              {row[col.id]}
                             </td>
                           ))}
                         </tr>

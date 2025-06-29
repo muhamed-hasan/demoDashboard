@@ -7,6 +7,7 @@ interface AttendanceRecord {
   login: string | null;
   logout: string | null;
   hours: number;
+  date: string;
 }
 
 export default function ReportsPage() {
@@ -27,9 +28,11 @@ export default function ReportsPage() {
         return res.json();
       })
       .then((data) => {
+        // فلترة النتائج لليوم المختار فقط
+        const filtered = data.filter((rec: any) => rec.date === selectedDate);
         // لكل موظف، نأخذ أول تسجيل دخول وآخر تسجيل خروج
-        const grouped: Record<string, AttendanceRecord> = {};
-        data.forEach((rec: any) => {
+        const grouped: Record<string, AttendanceRecord & { date: string }> = {};
+        filtered.forEach((rec: any) => {
           if (!grouped[rec.id]) {
             grouped[rec.id] = {
               id: rec.id,
@@ -37,16 +40,15 @@ export default function ReportsPage() {
               login: rec.login,
               logout: rec.logout,
               hours: rec.hours,
+              date: rec.date,
             };
           } else {
-            // تحديث أول تسجيل دخول إذا كان أقدم
             if (
               rec.login &&
               (!grouped[rec.id].login || rec.login < grouped[rec.id].login)
             ) {
               grouped[rec.id].login = rec.login;
             }
-            // تحديث آخر تسجيل خروج إذا كان أحدث
             if (
               rec.logout &&
               (!grouped[rec.id].logout || rec.logout > grouped[rec.id].logout)
@@ -55,7 +57,6 @@ export default function ReportsPage() {
             }
           }
         });
-        // حساب عدد الساعات بين أول دخول وآخر خروج
         const result = Object.values(grouped).map((rec) => {
           let hours = 0;
           if (rec.login && rec.logout) {
@@ -63,7 +64,7 @@ export default function ReportsPage() {
             const [h2, m2] = rec.logout.split(":").map(Number);
             let t1 = h1 * 60 + m1;
             let t2 = h2 * 60 + m2;
-            if (t2 < t1) t2 += 24 * 60; // دعم الورديات الليلية
+            if (t2 < t1) t2 += 24 * 60;
             hours = Math.round(((t2 - t1) / 60) * 100) / 100;
           } else {
             hours = 0;
@@ -96,6 +97,7 @@ export default function ReportsPage() {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">First Login</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Last Logout</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hours</th>
@@ -104,7 +106,7 @@ export default function ReportsPage() {
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {records.length === 0 && !loading ? (
               <tr>
-                <td colSpan={5} className="text-center py-4 text-gray-400">
+                <td colSpan={6} className="text-center py-4 text-gray-400">
                   No records found for this date
                 </td>
               </tr>
@@ -113,6 +115,7 @@ export default function ReportsPage() {
                 <tr key={rec.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.date}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.login || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.logout || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.hours}</td>
