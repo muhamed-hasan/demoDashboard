@@ -202,6 +202,24 @@ export default function Home() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
+        // Fetch all departments from data.json
+        const dataResponse = await fetch('/data.json');
+        if (dataResponse.ok) {
+          const employeeData = await dataResponse.json();
+          const departments = new Set<string>();
+          
+          // Extract all unique departments from employee data
+          Object.values(employeeData).forEach((employee: any) => {
+            if (employee.Department) {
+              departments.add(employee.Department);
+            }
+          });
+          
+          // Convert Set to Array and set available departments
+          setAvailableDepartments(Array.from(departments));
+        }
+        
+        // Fetch shifts from stats API
         const today = new Date().toISOString().split('T')[0];
         const params = new URLSearchParams({
           start: today,
@@ -210,9 +228,6 @@ export default function Home() {
         const response = await fetch(`/api/stats?${params}`);
         if (response.ok) {
           const result = await response.json();
-          if (result.deptDistribution) {
-            setAvailableDepartments(Object.keys(result.deptDistribution));
-          }
           if (result.shiftDistribution) {
             setAvailableShifts(Object.keys(result.shiftDistribution));
           }
@@ -444,22 +459,25 @@ export default function Home() {
                 </>
               )}
 
-              {/* Department Multi-Select */}
+              {/* Department Dropdown */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Departments</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
                 <select
-                  multiple
-                  value={selectedDepartments}
+                  value={selectedDepartments.length > 0 ? selectedDepartments[0] : ''}
                   onChange={(e) => {
-                    const values = Array.from(e.target.selectedOptions, option => option.value);
-                    setSelectedDepartments(values);
+                    const value = e.target.value;
+                    setSelectedDepartments(value ? [value] : []);
                   }}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  size={3}
                 >
-                  {availableDepartments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
+                  <option value="">All Departments</option>
+                  {availableDepartments
+                    .filter(dept => dept !== "All Departments") // Avoid duplicate "All Departments" option
+                    .sort((a, b) => a.localeCompare(b)) // Sort departments alphabetically
+                    .map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))
+                  }
                 </select>
               </div>
 
