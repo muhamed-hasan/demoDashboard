@@ -1,3 +1,4 @@
+'use client';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { FaTachometerAlt, FaUsers, FaMoon, FaSun } from 'react-icons/fa';
