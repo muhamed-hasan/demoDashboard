@@ -42,18 +42,53 @@ export async function GET(request: Request) {
     const departments = searchParams.getAll('department');
     const shift = searchParams.get('shift');
     const searchText = searchParams.get('search');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const offset = (page - 1) * limit;
 
-    // Fetch data from database
-    let query = 'SELECT * FROM table3';
-    const values: string[] = [];
+    // Build the base query with filters
+    let baseQuery = 'FROM table3';
+    let whereConditions: string[] = [];
+    let values: any[] = [];
+    let paramIndex = 1;
 
     if (startDate && endDate) {
-      query += ' WHERE date >= $1 AND date <= $2';
+      whereConditions.push(`date >= $${paramIndex} AND date <= $${paramIndex + 1}`);
       values.push(startDate, endDate);
+      paramIndex += 2;
     }
 
-    query += ' ORDER BY time DESC';
-    const result = await pool.query(query, values);
+    // Add department filter to database query if specified
+    if (departments.length > 0) {
+      // We'll filter by department after joining with employee data
+    }
+
+    // Add search filter to database query if specified
+    if (searchText) {
+      // We'll filter by search after joining with employee data
+    }
+
+    // Build the WHERE clause
+    let whereClause = '';
+    if (whereConditions.length > 0) {
+      whereClause = 'WHERE ' + whereConditions.join(' AND ');
+    }
+
+    // Get total count for pagination
+    const countQuery = `SELECT COUNT(*) ${baseQuery} ${whereClause}`;
+    const countResult = await pool.query(countQuery, values);
+    const totalCount = parseInt(countResult.rows[0].count);
+
+    // Get paginated data
+    const dataQuery = `
+      SELECT * ${baseQuery} 
+      ${whereClause} 
+      ORDER BY time DESC 
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    values.push(limit, offset);
+    
+    const result = await pool.query(dataQuery, values);
     
     // Load employee data from JSON file
     const jsonFilePath = path.join(process.cwd(), 'public', 'data.json');
@@ -74,7 +109,7 @@ export async function GET(request: Request) {
       };
     });
     
-    // Apply client-side filters
+    // Apply client-side filters that couldn't be done at database level
     if (departments.length > 0) {
       enrichedData = enrichedData.filter(item => 
         departments.includes(item.department)
@@ -96,7 +131,22 @@ export async function GET(request: Request) {
       );
     }
     
-    return NextResponse.json(enrichedData);
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+    
+    return NextResponse.json({
+      data: enrichedData,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+        hasNextPage,
+        hasPrevPage,
+        limit
+      }
+    });
   } catch (error) {
     console.error('Error fetching data:', error);
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });

@@ -62,6 +62,14 @@ export default function Home() {
   const [uniquePerDay, setUniquePerDay] = useState(false);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [paginationInfo, setPaginationInfo] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+    limit: 10
+  });
 
   // Fetch detailed attendance data
   const {
@@ -86,26 +94,23 @@ export default function Home() {
     columnHelper.accessor('department', { header: 'Department' }),
   ];
 
-  const filteredData = uniquePerDay
-    ? Array.from(
-        data.reduce((acc, row) => {
-          // استخدم مفتاح اليوم + id
-          const key = `${row.id}-${row.time?.split(' ')[0] || ''}`;
-          if (!acc.has(key)) acc.set(key, row);
-          return acc;
-        }, new Map()).values()
-      )
-    : data;
-
   const table = useReactTable({
-    data: filteredData,
+    data: uniquePerDay 
+      ? Array.from(
+          data.reduce((acc, row) => {
+            // استخدم مفتاح اليوم + id
+            const key = `${row.id}-${row.time?.split(' ')[0] || ''}`;
+            if (!acc.has(key)) acc.set(key, row);
+            return acc;
+          }, new Map()).values()
+        )
+      : data,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   // حساب البيانات المعروضة في الصفحة الحالية
-  const paginatedData = filteredData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const totalPages = paginationInfo.totalPages;
 
   const handleDateRangeChange = (range: 'today' | 'week' | 'month' | 'year' | 'custom') => {
     const today = new Date();
@@ -184,11 +189,11 @@ export default function Home() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setData([]); // تنظيف البيانات القديمة فوراً
-        setPage(1); // إعادة تعيين الصفحة الأولى
         const params = new URLSearchParams({
           startDate,
           endDate,
+          page: page.toString(),
+          limit: rowsPerPage.toString(),
         });
         
         // Add filter parameters
@@ -210,10 +215,26 @@ export default function Home() {
           throw new Error('Failed to fetch data');
         }
         const result = await response.json();
-        setData(result);
+        
+        // Handle new pagination response format
+        if (result.data && result.pagination) {
+          setData(result.data);
+          setPaginationInfo(result.pagination);
+        } else {
+          // Fallback for old format
+          setData(result);
+          setPaginationInfo({
+            currentPage: page,
+            totalPages: Math.ceil(result.length / rowsPerPage),
+            totalCount: result.length,
+            hasNextPage: page < Math.ceil(result.length / rowsPerPage),
+            hasPrevPage: page > 1,
+            limit: rowsPerPage
+          });
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
-        setData([]); // تنظيف البيانات في حالة الخطأ
+        setData([]);
       } finally {
         setLoading(false);
       }
@@ -221,7 +242,12 @@ export default function Home() {
 
     fetchData();
     fetchStats();
-  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, refreshTrigger, fetchStats, uniquePerDay]);
+  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, refreshTrigger, fetchStats, uniquePerDay, page, rowsPerPage]);
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, uniquePerDay]);
 
   // Fetch initial data for departments and shifts on component mount
   useEffect(() => {
@@ -578,29 +604,30 @@ export default function Home() {
               
               {/* Table */}
               <div className="flex items-center justify-between mb-2 mt-4">
-                <div>
-                  <label className="mr-2 text-sm font-medium">Rows per page:</label>
-                  <select
-                    value={rowsPerPage}
-                    onChange={e => {
-                      setRowsPerPage(Number(e.target.value));
-                      setPage(1);
-                      setData([]); // تنظيف البيانات عند تغيير عدد الصفوف
-                    }}
-                    className="rounded-md border-gray-300 px-2 py-1 text-sm shadow focus:ring-2 focus:ring-blue-400 transition"
-                  >
-                    <option value={10}>10</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <label className="mr-2 text-sm font-medium">Rows per page:</label>
+                    <select
+                      value={rowsPerPage}
+                      onChange={e => {
+                        setRowsPerPage(Number(e.target.value));
+                        setPage(1);
+                      }}
+                      className="rounded-md border-gray-300 px-2 py-1 text-sm shadow focus:ring-2 focus:ring-blue-400 transition"
+                    >
+                      <option value={10}>10</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Showing {((page - 1) * rowsPerPage) + 1} to {Math.min(page * rowsPerPage, paginationInfo.totalCount)} of {paginationInfo.totalCount} results
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => {
-                      setPage(p => Math.max(1, p - 1));
-                      setData([]); // تنظيف البيانات عند تغيير الصفحة
-                    }}
-                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={!paginationInfo.hasPrevPage}
                     className="w-8 h-8 flex items-center justify-center rounded-full border bg-gray-100 dark:bg-gray-700 text-sm disabled:opacity-50 transition"
                   >
                     &#8592;
@@ -609,10 +636,7 @@ export default function Home() {
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
                     <button
                       key={n}
-                      onClick={() => {
-                        setPage(n);
-                        setData([]); // تنظيف البيانات عند تغيير الصفحة
-                      }}
+                      onClick={() => setPage(n)}
                       className={`w-8 h-8 flex items-center justify-center rounded-full border transition
                         ${page === n ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'}`}
                     >
@@ -620,11 +644,8 @@ export default function Home() {
                     </button>
                   ))}
                   <button
-                    onClick={() => {
-                      setPage(p => Math.min(totalPages, p + 1));
-                      setData([]); // تنظيف البيانات عند تغيير الصفحة
-                    }}
-                    disabled={page === totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={!paginationInfo.hasNextPage}
                     className="w-8 h-8 flex items-center justify-center rounded-full border bg-gray-100 dark:bg-gray-700 text-sm disabled:opacity-50 transition"
                   >
                     &#8594;
@@ -653,7 +674,7 @@ export default function Home() {
                     ))}
                   </thead>
                   <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
-                    {paginatedData.length === 0 ? (
+                    {table.getRowModel().rows.length === 0 ? (
                       <tr>
                         <td 
                           colSpan={columns.length} 
@@ -663,14 +684,14 @@ export default function Home() {
                         </td>
                       </tr>
                     ) : (
-                      paginatedData.map((row, idx) => (
-                        <tr key={`${row.id}-${row.time}-${idx}`} className="hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors duration-150">
-                          {table.getAllColumns().map((col) => (
+                      table.getRowModel().rows.map((row, idx) => (
+                        <tr key={row.id} className="hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors duration-150">
+                          {row.getVisibleCells().map((cell) => (
                             <td
-                              key={col.id}
+                              key={cell.id}
                               className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
                             >
-                              {row[col.id]}
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </td>
                           ))}
                         </tr>
