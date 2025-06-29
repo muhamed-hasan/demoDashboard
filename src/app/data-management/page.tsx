@@ -116,6 +116,7 @@ const DataForm: React.FC<{
 export default function DataManagementPage() {
   const [data, setData] = useState<EmployeeData[]>([]);
   const [editItem, setEditItem] = useState<EmployeeData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // جلب البيانات الأولية
   useEffect(() => {
@@ -124,7 +125,6 @@ export default function DataManagementPage() {
       .then(obj => setData(Object.entries(obj).map(([id, v]) => ({ ...((({ id, ...rest }) => rest)(v as EmployeeData)), id }))))
       .catch(error => {
         console.error('Error fetching data:', error);
-        // Set some mock data for demonstration
         setData([
           { id: '1', 'First Name': 'John', 'Last Name': 'Doe', Department: 'IT' },
           { id: '2', 'First Name': 'Jane', 'Last Name': 'Smith', Department: 'HR' },
@@ -134,11 +134,18 @@ export default function DataManagementPage() {
 
   // معالجة عمليات الحذف
   const handleDelete = (id: string) => {
+    setError(null);
     fetch(`/api/data?id=${id}`, { method: 'DELETE' })
-      .then(() => setData(data.filter(item => item.id !== id)))
+      .then(async (res) => {
+        if (!res.ok) {
+          const result = await res.json();
+          setError(result.error || 'Delete failed');
+          return;
+        }
+        setData(data.filter(item => item.id !== id));
+      })
       .catch(error => {
-        console.error('Error deleting item:', error);
-        // Remove from local state even if API fails
+        setError('Delete failed');
         setData(data.filter(item => item.id !== id));
       });
   };
@@ -146,6 +153,38 @@ export default function DataManagementPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">إدارة البيانات</h1>
+      {error && <div className="mb-4 text-red-600 font-bold">{error}</div>}
+      {/* نموذج الإضافة/التعديل */}
+      <DataForm 
+        initialData={editItem}
+        onSubmit={(values) => {
+          setError(null);
+          const method = editItem ? 'PUT' : 'POST';
+          fetch('/api/data', {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(values)
+          }).then(async (res) => {
+            if (!res.ok) {
+              const result = await res.json();
+              setError(result.error || 'Save failed');
+              return;
+            }
+            // تحديث الحالة المحلية
+            if (editItem) {
+              setData(data.map(d => d.id === values.id ? values : d));
+            } else {
+              setData([...data, values]);
+            }
+            setEditItem(null);
+          }).catch(error => {
+            setError('Save failed');
+          });
+        }}
+      />
+      {/* الجدول */}
       <Table>
         <thead className="bg-gray-50">
           <tr>
@@ -171,38 +210,6 @@ export default function DataManagementPage() {
           ))}
         </TableBody>
       </Table>
-
-      {/* نموذج الإضافة/التعديل */}
-      <DataForm 
-        initialData={editItem}
-        onSubmit={(values) => {
-          const method = editItem ? 'PUT' : 'POST';
-          fetch('/api/data', {
-            method,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(values)
-          }).then(() => {
-            // تحديث الحالة المحلية
-            if (editItem) {
-              setData(data.map(d => d.id === values.id ? values : d));
-            } else {
-              setData([...data, values]);
-            }
-            setEditItem(null);
-          }).catch(error => {
-            console.error('Error saving data:', error);
-            // Update local state even if API fails
-            if (editItem) {
-              setData(data.map(d => d.id === values.id ? values : d));
-            } else {
-              setData([...data, values]);
-            }
-            setEditItem(null);
-          });
-        }}
-      />
     </div>
   );
 }

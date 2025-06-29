@@ -22,7 +22,6 @@ import { Doughnut, Bar } from 'react-chartjs-2';
 import { FilterProvider, FilterContextType } from '@/contexts/FilterContext';
 import AttendanceTable, { AttendanceData } from '@/components/AttendanceTable';
 import { useAttendanceData } from '@/hooks/useAttendanceData';
-import Sidebar from '@/components/Sidebar';
 
 // Register Chart.js components
 ChartJS.register(
@@ -330,9 +329,6 @@ export default function Home() {
 
   return (
     <div className="flex">
-      <aside className="w-64 min-h-screen border-r">
-        <Sidebar />
-      </aside>
       <main className="flex-1 p-4">
         <FilterProvider value={filterContextValue}>
           <div className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">

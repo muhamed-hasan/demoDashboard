@@ -11,15 +11,34 @@ export async function GET() {
 export async function POST(request: Request) {
   const newData = await request.json();
   const dataPath = path.join(process.cwd(), 'public', 'data.json');
-  
-  // قراءة البيانات الحالية
   const currentData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-  
-  // إضافة معرف فريد
-  const newId = Math.max(...Object.keys(currentData).map(Number)) + 1;
-  currentData[newId] = { ...newData, id: newId.toString() };
-  
-  // حفظ التغييرات
+
+  // تحقق من id المدخل
+  const userId = newData.id;
+  if (!userId || isNaN(Number(userId))) {
+    return NextResponse.json({ error: 'ID must be a valid number.' }, { status: 400 });
+  }
+  if (currentData[userId]) {
+    return NextResponse.json({ error: 'ID already exists.' }, { status: 400 });
+  }
+
+  // أضف البيانات الجديدة
+  currentData[userId] = { ...newData, id: userId };
+  fs.writeFileSync(dataPath, JSON.stringify(currentData, null, 2));
+  return NextResponse.json({ success: true });
+}
+
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  const dataPath = path.join(process.cwd(), 'public', 'data.json');
+  const currentData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+
+  if (!id || !currentData[id]) {
+    return NextResponse.json({ error: 'ID not found.' }, { status: 404 });
+  }
+
+  delete currentData[id];
   fs.writeFileSync(dataPath, JSON.stringify(currentData, null, 2));
   return NextResponse.json({ success: true });
 }
