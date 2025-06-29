@@ -49,13 +49,13 @@ const Sidebar = () => {
           <FaTachometerAlt className="text-lg" />
           <span>Dashboard</span>
         </Link>
-        <Link href="/data-management" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${pathname === '/data-management' ? 'bg-[#2563eb] text-white' : 'hover:bg-[#232A47]'} ${theme === 'dark' ? 'hover:bg-[#1e293b]' : ''}`}>
-          <FaUsers className="text-lg" />
-          <span>Employees</span>
-        </Link>
         <Link href="/reports" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${pathname === '/reports' ? 'bg-[#2563eb] text-white' : 'hover:bg-[#232A47]'} ${theme === 'dark' ? 'hover:bg-[#1e293b]' : ''}`}>
           <FaUsers className="text-lg" />
           <span>Reports</span>
+        </Link>
+        <Link href="/data-management" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${pathname === '/data-management' ? 'bg-[#2563eb] text-white' : 'hover:bg-[#232A47]'} ${theme === 'dark' ? 'hover:bg-[#1e293b]' : ''}`}>
+          <FaUsers className="text-lg" />
+          <span>Employees</span>
         </Link>
       </nav>
       <button

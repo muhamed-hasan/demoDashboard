@@ -24,11 +24,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // تحديد الثيم من الكوكيز (SSR/CSR)
+  let htmlClass = `${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-tr from-indigo-100 via-white to-blue-100 min-h-screen`;
+  if (typeof window !== 'undefined') {
+    if (document.cookie.includes('theme=dark')) {
+      htmlClass += ' dark';
+    }
+  }
+  // في SSR دائماً light، لكن عند mount سيعدلها Sidebar
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-tr from-indigo-100 via-white to-blue-100 min-h-screen`}
-      >
+    <html lang="en" className={htmlClass}>
+      <body>
         <div className="flex min-h-screen">
           <Sidebar />
           <div className="flex-1 flex flex-col min-h-screen pl-64">
