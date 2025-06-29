@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMockAttendanceData } from '../../../../lib/mockAttendance';
-import employeeData from '../../../../public/data.json';
+import pool from '@/lib/db';
+import fs from 'fs';
+import path from 'path';
 
 interface Employee {
   'First Name': string;
@@ -30,6 +31,40 @@ export interface AttendanceDetailData {
   status: 'Present' | 'Late' | 'Absent' | 'Early Leave' | 'Partial Day';
 }
 
+// Function to calculate hours between two times
+function calculateHours(loginTime: string, logoutTime: string): number {
+  try {
+    const login = new Date(`2000-01-01T${loginTime}`);
+    const logout = new Date(`2000-01-01T${logoutTime}`);
+    
+    // If logout is before login, it means logout is next day
+    if (logout < login) {
+      logout.setDate(logout.getDate() + 1);
+    }
+    
+    const diffMs = logout.getTime() - login.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    
+    return Math.round(diffHours * 100) / 100;
+  } catch (error) {
+    return 0;
+  }
+}
+
+// Function to format time to HH:MM
+function formatTime(dateTimeString: string): string {
+  try {
+    const date = new Date(dateTimeString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+  } catch (error) {
+    return dateTimeString;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -39,53 +74,72 @@ export async function GET(request: NextRequest) {
     const shift = searchParams.get('shift');
     const search = searchParams.get('search');
 
-    // Get raw attendance data
-    const attendanceRecords = getMockAttendanceData();
-    const employees = employeeData as Record<string, Employee>;
+    if (!startDate || !endDate) {
+      return NextResponse.json(
+        { error: 'startDate and endDate are required' },
+        { status: 400 }
+      );
+    }
 
-    // Transform the data to match our table interface
-    let detailedAttendance: AttendanceDetailData[] = attendanceRecords.map((record: AttendanceRecord) => {
-      const employee = employees[record.id];
+    // Load employee data from JSON file
+    const jsonFilePath = path.join(process.cwd(), 'public', 'data.json');
+    const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
+    const employees: Record<string, Employee> = JSON.parse(jsonData);
+
+    // Query to get first login and last logout for each employee on the specified date
+    const query = `
+      SELECT 
+        id,
+        DATE(time) as date,
+        MIN(CASE WHEN time::time < '12:00:00' THEN time END) as first_login,
+        MAX(CASE WHEN time::time >= '12:00:00' THEN time END) as last_logout
+      FROM table3 
+      WHERE DATE(time) = $1
+      GROUP BY id, DATE(time)
+      ORDER BY id
+    `;
+
+    const result = await pool.query(query, [startDate]);
+    
+    // Transform the data
+    let detailedAttendance: AttendanceDetailData[] = result.rows.map((row: any) => {
+      const employee = employees[row.id];
       const fullName = employee 
         ? `${employee['First Name']} ${employee['Last Name']}`
-        : `Employee ${record.id}`;
+        : `Employee ${row.id}`;
 
-      // Map status to include additional statuses
-      let status: AttendanceDetailData['status'] = record.status;
-      
-      // Add logic for Early Leave and Partial Day if needed
-      if (record.status === 'Present' && record.totalHours > 0 && record.totalHours < 6) {
-        status = 'Partial Day';
-      } else if (record.status === 'Present' && record.totalHours > 0 && record.totalHours < 8 && record.logout) {
-        status = 'Early Leave';
+      const login = row.first_login ? formatTime(row.first_login) : null;
+      const logout = row.last_logout ? formatTime(row.last_logout) : null;
+      const hours = login && logout ? calculateHours(login, logout) : 0;
+
+      // Determine status based on hours
+      let status: AttendanceDetailData['status'] = 'Absent';
+      if (login && logout) {
+        if (hours >= 8) {
+          status = 'Present';
+        } else if (hours >= 6) {
+          status = 'Partial Day';
+        } else if (hours > 0) {
+          status = 'Early Leave';
+        }
+      } else if (login && !logout) {
+        status = 'Present'; // Only login, no logout
       }
 
       return {
-        date: record.date,
-        id: record.id,
+        date: row.date,
+        id: row.id,
         name: fullName,
         department: employee?.Department || 'Unknown',
-        shift: employee?.Shift || 'Day', // القيمة الافتراضية تبقى 'Day' لأن العرض يتم بشكل غير حساس لحالة الأحرف
-        login: record.login,
-        logout: record.logout,
-        hours: record.totalHours,
+        shift: employee?.Shift || 'Day',
+        login: login,
+        logout: logout,
+        hours: hours,
         status: status,
       };
     });
 
     // Apply filters
-    if (startDate) {
-      detailedAttendance = detailedAttendance.filter(
-        record => new Date(record.date) >= new Date(startDate)
-      );
-    }
-
-    if (endDate) {
-      detailedAttendance = detailedAttendance.filter(
-        record => new Date(record.date) <= new Date(endDate)
-      );
-    }
-
     if (departments.length > 0) {
       detailedAttendance = detailedAttendance.filter(
         record => departments.includes(record.department)
@@ -111,12 +165,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Sort by date (newest first) and then by name
-    detailedAttendance.sort((a, b) => {
-      const dateComparison = new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (dateComparison !== 0) return dateComparison;
-      return a.name.localeCompare(b.name);
-    });
+    // Sort by name
+    detailedAttendance.sort((a, b) => a.name.localeCompare(b.name));
 
     return NextResponse.json(detailedAttendance);
   } catch (error) {
