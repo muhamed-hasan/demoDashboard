@@ -60,6 +60,10 @@ const Sidebar = () => {
           <FaUsers className="text-lg" />
           <span>Employees</span>
         </Link>
+        <Link href="/reports" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${isActive('/reports') ? 'bg-[#2563eb] text-white' : 'hover:bg-[#232A47]'} ${theme === 'dark' ? 'hover:bg-[#1e293b]' : ''}`}>
+          <FaUsers className="text-lg" />
+          <span>Reports</span>
+        </Link>
       </nav>
       <button
         onClick={toggleTheme}
