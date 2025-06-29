@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         id: record.id,
         name: fullName,
         department: employee?.Department || 'Unknown',
-        shift: employee?.Shift || 'Day',
+        shift: employee?.Shift || 'Day', // القيمة الافتراضية تبقى 'Day' لأن العرض يتم بشكل غير حساس لحالة الأحرف
         login: record.login,
         logout: record.logout,
         hours: record.totalHours,

@@ -60,7 +60,7 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
   };
 
   // Define columns
-  const columns = useMemo<ColumnDef<AttendanceData>[]>(() => [
+  const columns = useMemo(() => [
     columnHelper.accessor('date', {
       header: ({ column }) => (
         <button
@@ -144,9 +144,10 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
       ),
       cell: ({ getValue }) => {
         const shift = getValue();
+        const normalizedShift = shift?.toLowerCase() || '';
         return (
           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-            shift === 'Night' 
+            normalizedShift === 'night' 
               ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
               : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
           }`}>
@@ -219,7 +220,7 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
         );
       },
     }),
-  ], []);
+  ] as ColumnDef<AttendanceData>[], []);
 
   const table = useReactTable({
     data,
