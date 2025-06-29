@@ -59,7 +59,6 @@ export default function Home() {
   const [refreshTrigger] = useState(0);
   const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
   const [availableShifts, setAvailableShifts] = useState<string[]>([]);
-  const [uniquePerDay, setUniquePerDay] = useState(false);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [paginationInfo, setPaginationInfo] = useState({
@@ -95,16 +94,7 @@ export default function Home() {
   ];
 
   const table = useReactTable({
-    data: uniquePerDay 
-      ? Array.from(
-          data.reduce((acc, row) => {
-            // استخدم مفتاح اليوم + id
-            const key = `${row.id}-${row.time?.split(' ')[0] || ''}`;
-            if (!acc.has(key)) acc.set(key, row);
-            return acc;
-          }, new Map()).values()
-        )
-      : data,
+    data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -206,9 +196,6 @@ export default function Home() {
         if (searchQuery) {
           params.append('search', searchQuery);
         }
-        if (uniquePerDay) {
-          params.append('uniquePerDay', 'true');
-        }
         
         const response = await fetch(`/api/table-data?${params}`);
         if (!response.ok) {
@@ -242,12 +229,12 @@ export default function Home() {
 
     fetchData();
     fetchStats();
-  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, refreshTrigger, fetchStats, uniquePerDay, page, rowsPerPage]);
+  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, refreshTrigger, fetchStats, page, rowsPerPage]);
 
   // Reset page to 1 when filters change
   useEffect(() => {
     setPage(1);
-  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, uniquePerDay]);
+  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery]);
 
   // Fetch initial data for departments and shifts on component mount
   useEffect(() => {
@@ -579,19 +566,6 @@ export default function Home() {
                         </svg>
                       </button>
                     </div>
-                  </div>
-
-                  {/* Unique per day checkbox */}
-                  <div className="space-y-2 flex items-end">
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      <input
-                        type="checkbox"
-                        checked={uniquePerDay}
-                        onChange={e => setUniquePerDay(e.target.checked)}
-                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                      />
-                      Unique per day
-                    </label>
                   </div>
                 </div>
               </div>
