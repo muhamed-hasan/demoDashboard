@@ -14,6 +14,26 @@ interface EmployeeRecord {
   [key: string]: EmployeeData;
 }
 
+// Function to format time to show only day and time
+function formatTime(dateTimeString: string): string {
+  try {
+    const date = new Date(dateTimeString);
+    const day = date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+    const time = date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    return `${day} ${time}`;
+  } catch (error) {
+    return dateTimeString; // Return original if parsing fails
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -43,14 +63,11 @@ export async function GET(request: Request) {
       const employee = employeeData[employeeId];
       
       return {
-        ...row,
-        // Add employee details from JSON
-        firstName: employee?.['First Name'] || '',
-        lastName: employee?.['Last Name'] || '',
-        department: employee?.['Department'] || '',
-        shift: employee?.['Shift'] || '',
-        // Create full name for convenience
+        id: row.id,
+        time: formatTime(row.time), // Format time to show day and time only
         fullName: employee ? `${employee['First Name']} ${employee['Last Name']}`.trim() : '',
+        shift: employee?.['Shift'] || '',
+        department: employee?.['Department'] || '',
       };
     });
     

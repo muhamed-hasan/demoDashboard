@@ -23,16 +23,9 @@ export default function Home() {
   const columns = [
     columnHelper.accessor('id', { header: 'ID' }),
     columnHelper.accessor('time', { header: 'Time' }),
-    columnHelper.accessor('date', { header: 'Date' }),
-    columnHelper.accessor('time2', { header: 'Time 2' }),
-    columnHelper.accessor('fname', { header: 'First Name' }),
-    columnHelper.accessor('lname', { header: 'Last Name' }),
-    columnHelper.accessor('name', { header: 'Full Name' }),
-    columnHelper.accessor('rname', { header: 'Reader Name' }),
-    columnHelper.accessor('group', { header: 'Group' }),
-    columnHelper.accessor('card_number', { header: 'Card Number' }),
-    columnHelper.accessor('pic', { header: 'Picture' }),
-    columnHelper.accessor('dev', { header: 'Device' }),
+    columnHelper.accessor('fullName', { header: 'Full Name' }),
+    columnHelper.accessor('shift', { header: 'Shift' }),
+    columnHelper.accessor('department', { header: 'Department' }),
   ];
 
   const table = useReactTable({
