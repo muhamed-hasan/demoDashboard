@@ -184,6 +184,8 @@ export default function Home() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setData([]); // تنظيف البيانات القديمة فوراً
+        setPage(1); // إعادة تعيين الصفحة الأولى
         const params = new URLSearchParams({
           startDate,
           endDate,
@@ -211,6 +213,7 @@ export default function Home() {
         setData(result);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
+        setData([]); // تنظيف البيانات في حالة الخطأ
       } finally {
         setLoading(false);
       }
@@ -582,6 +585,7 @@ export default function Home() {
                     onChange={e => {
                       setRowsPerPage(Number(e.target.value));
                       setPage(1);
+                      setData([]); // تنظيف البيانات عند تغيير عدد الصفوف
                     }}
                     className="rounded-md border-gray-300 px-2 py-1 text-sm shadow focus:ring-2 focus:ring-blue-400 transition"
                   >
@@ -592,7 +596,10 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    onClick={() => {
+                      setPage(p => Math.max(1, p - 1));
+                      setData([]); // تنظيف البيانات عند تغيير الصفحة
+                    }}
                     disabled={page === 1}
                     className="w-8 h-8 flex items-center justify-center rounded-full border bg-gray-100 dark:bg-gray-700 text-sm disabled:opacity-50 transition"
                   >
@@ -602,7 +609,10 @@ export default function Home() {
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
                     <button
                       key={n}
-                      onClick={() => setPage(n)}
+                      onClick={() => {
+                        setPage(n);
+                        setData([]); // تنظيف البيانات عند تغيير الصفحة
+                      }}
                       className={`w-8 h-8 flex items-center justify-center rounded-full border transition
                         ${page === n ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'}`}
                     >
@@ -610,7 +620,10 @@ export default function Home() {
                     </button>
                   ))}
                   <button
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() => {
+                      setPage(p => Math.min(totalPages, p + 1));
+                      setData([]); // تنظيف البيانات عند تغيير الصفحة
+                    }}
                     disabled={page === totalPages}
                     className="w-8 h-8 flex items-center justify-center rounded-full border bg-gray-100 dark:bg-gray-700 text-sm disabled:opacity-50 transition"
                   >
@@ -651,7 +664,7 @@ export default function Home() {
                       </tr>
                     ) : (
                       paginatedData.map((row, idx) => (
-                        <tr key={row.id || idx} className="hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors duration-150">
+                        <tr key={`${row.id}-${row.time}-${idx}`} className="hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors duration-150">
                           {table.getAllColumns().map((col) => (
                             <td
                               key={col.id}
