@@ -121,7 +121,7 @@ export default function DataManagementPage() {
   useEffect(() => {
     fetch('/api/data')
       .then(res => res.json())
-      .then(setData)
+      .then(obj => setData(Object.entries(obj).map(([id, v]) => ({ ...((({ id, ...rest }) => rest)(v as EmployeeData)), id }))))
       .catch(error => {
         console.error('Error fetching data:', error);
         // Set some mock data for demonstration
