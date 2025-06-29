@@ -6,9 +6,26 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log('Delete request received with params:', params);
+    
+    // Check if params.id exists
+    if (!params || !params.id) {
+      console.log('No params or params.id found');
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'معرف الموظف مطلوب' 
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log('Parsing ID:', params.id);
     const id = parseInt(params.id);
+    console.log('Parsed ID:', id);
     
     if (isNaN(id)) {
+      console.log('Invalid ID format');
       return NextResponse.json(
         { 
           success: false, 
@@ -18,10 +35,13 @@ export async function DELETE(
       );
     }
 
+    console.log('Checking if employee exists with ID:', id);
     // Check if employee exists
     const checkResult = await pool.query('SELECT * FROM details WHERE id = $1', [id]);
+    console.log('Check result rows:', checkResult.rows.length);
     
     if (checkResult.rows.length === 0) {
+      console.log('Employee not found');
       return NextResponse.json(
         { 
           success: false, 
@@ -31,8 +51,10 @@ export async function DELETE(
       );
     }
 
+    console.log('Deleting employee with ID:', id);
     // Delete employee
     await pool.query('DELETE FROM details WHERE id = $1', [id]);
+    console.log('Employee deleted successfully');
 
     return NextResponse.json({
       success: true,
