@@ -3,7 +3,7 @@ import React from 'react';
 import { FaTachometerAlt, FaUsers, FaFileAlt, FaCog, FaBuilding } from 'react-icons/fa';
 
 const Sidebar = () => (
-  <aside className="h-screen bg-blue-900 text-white flex flex-col w-64 shadow-lg">
+  <aside className="fixed top-0 left-0 h-screen min-h-screen w-64 bg-blue-900 text-white flex flex-col shadow-lg z-40">
     {/* Company Logo & Name */}
     <div className="flex items-center gap-3 px-6 py-6 border-b border-blue-800">
       <FaBuilding className="text-3xl text-white" />
