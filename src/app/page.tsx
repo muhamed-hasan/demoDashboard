@@ -59,6 +59,7 @@ export default function Home() {
   const [refreshTrigger] = useState(0);
   const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
   const [availableShifts, setAvailableShifts] = useState<string[]>([]);
+  const [uniquePerDay, setUniquePerDay] = useState(false);
 
   // Fetch detailed attendance data
   const {
@@ -83,8 +84,19 @@ export default function Home() {
     columnHelper.accessor('department', { header: 'Department' }),
   ];
 
+  const filteredData = uniquePerDay
+    ? Array.from(
+        data.reduce((acc, row) => {
+          // استخدم مفتاح اليوم + id
+          const key = `${row.id}-${row.time?.split(' ')[0] || ''}`;
+          if (!acc.has(key)) acc.set(key, row);
+          return acc;
+        }, new Map()).values()
+      )
+    : data;
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -529,6 +541,19 @@ export default function Home() {
                         </svg>
                       </button>
                     </div>
+                  </div>
+
+                  {/* Unique per day checkbox */}
+                  <div className="space-y-2 flex items-end">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <input
+                        type="checkbox"
+                        checked={uniquePerDay}
+                        onChange={e => setUniquePerDay(e.target.checked)}
+                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                      />
+                      Unique per day
+                    </label>
                   </div>
                 </div>
               </div>
