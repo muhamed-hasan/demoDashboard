@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from '@/components/Sidebar';
+import { FaBell, FaCog, FaSearch } from 'react-icons/fa';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,13 +27,46 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-tr from-indigo-100 via-white to-blue-100 min-h-screen`}
       >
         <div className="flex min-h-screen">
           <Sidebar />
-          <main className="flex-1 bg-gray-50 dark:bg-gray-900 pl-64">
-            {children}
-          </main>
+          <div className="flex-1 flex flex-col min-h-screen pl-64">
+            {/* Header */}
+            <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200 flex items-center justify-between px-8 py-4 shadow-sm">
+              <div className="flex items-center gap-3 w-1/2">
+                <div className="relative w-full">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <FaSearch />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Type to search..."
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-6">
+                <button className="relative p-2 rounded-full hover:bg-indigo-100 text-indigo-600">
+                  <FaBell className="text-lg" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+                <button className="p-2 rounded-full hover:bg-indigo-100 text-indigo-600">
+                  <FaCog className="text-lg" />
+                </button>
+                <div className="flex items-center gap-2">
+                  <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" className="w-9 h-9 rounded-full border-2 border-indigo-200 shadow" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-gray-800 text-sm">Thomas Anree</span>
+                    <span className="text-xs text-gray-400">UX Designer</span>
+                  </div>
+                </div>
+              </div>
+            </header>
+            <main className="flex-1 px-8 py-8">
+              {children}
+            </main>
+          </div>
         </div>
       </body>
     </html>
