@@ -22,6 +22,7 @@ import { Doughnut, Bar } from 'react-chartjs-2';
 import { FilterProvider, FilterContextType } from '@/contexts/FilterContext';
 import AttendanceTable, { AttendanceData } from '@/components/AttendanceTable';
 import { useAttendanceData } from '@/hooks/useAttendanceData';
+import Sidebar from '@/components/Sidebar';
 
 // Register Chart.js components
 ChartJS.register(
@@ -328,298 +329,305 @@ export default function Home() {
   };
 
   return (
-    <FilterProvider value={filterContextValue}>
-      <div className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-screen-2xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">Attendance Dashboard</h1>
-          
-          {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
-                  <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Employees</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalEmployees || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-green-100 dark:bg-green-900">
-                  <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Present</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.presentCount || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-red-100 dark:bg-red-900">
-                  <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Absent</p>
-                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats?.absentCount || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
-                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Attendance Rate</p>
-                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats?.attendanceRate.toFixed(1) || 0}%</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Department Distribution</h3>
-              <div className="h-64">
-                {stats && Object.keys(stats.deptDistribution).length > 0 ? (
-                  <Doughnut data={doughnutData} options={chartOptions} />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                    No data available
+    <div className="flex">
+      <aside className="w-64 min-h-screen border-r">
+        <Sidebar />
+      </aside>
+      <main className="flex-1 p-4">
+        <FilterProvider value={filterContextValue}>
+          <div className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
+            <div className="max-w-screen-2xl mx-auto">
+              <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">Attendance Dashboard</h1>
+              
+              {/* Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                  <div className="flex items-center">
+                    <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                      <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Employees</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalEmployees || 0}</p>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Shift Distribution</h3>
-              <div className="h-64">
-                {stats && Object.keys(stats.shiftDistribution).length > 0 ? (
-                  <Bar data={barData} options={chartOptions} />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                    No data available
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                  <div className="flex items-center">
+                    <div className="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                      <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Present</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.presentCount || 0}</p>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
+                </div>
 
-          {/* Filters Toolbar */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Filters</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {/* Date Range Filter */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
-                <select
-                  value={dateRange}
-                  onChange={(e) => handleDateRangeChange(e.target.value as 'today' | 'week' | 'month' | 'year' | 'custom')}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="today">Today</option>
-                  <option value="week">Last 7 Days</option>
-                  <option value="month">Last 30 Days</option>
-                  <option value="year">Last Year</option>
-                  <option value="custom">Custom</option>
-                </select>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                  <div className="flex items-center">
+                    <div className="p-3 rounded-full bg-red-100 dark:bg-red-900">
+                      <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Absent</p>
+                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats?.absentCount || 0}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                  <div className="flex items-center">
+                    <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
+                      <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Attendance Rate</p>
+                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats?.attendanceRate.toFixed(1) || 0}%</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Custom Date Inputs */}
-              {dateRange === 'custom' && (
-                <>
+              {/* Charts Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Department Distribution</h3>
+                  <div className="h-64">
+                    {stats && Object.keys(stats.deptDistribution).length > 0 ? (
+                      <Doughnut data={doughnutData} options={chartOptions} />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Shift Distribution</h3>
+                  <div className="h-64">
+                    {stats && Object.keys(stats.shiftDistribution).length > 0 ? (
+                      <Bar data={barData} options={chartOptions} />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Filters Toolbar */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
+                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Filters</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {/* Date Range Filter */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">From Date</label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
+                    <select
+                      value={dateRange}
+                      onChange={(e) => handleDateRangeChange(e.target.value as 'today' | 'week' | 'month' | 'year' | 'custom')}
                       className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">To Date</label>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Department Dropdown */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
-                <select
-                  value={selectedDepartments.length > 0 ? selectedDepartments[0] : ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedDepartments(value ? [value] : []);
-                  }}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="">All Departments</option>
-                  {availableDepartments
-                    .filter(dept => dept !== "All Departments") // Avoid duplicate "All Departments" option
-                    .sort((a, b) => a.localeCompare(b)) // Sort departments alphabetically
-                    .map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))
-                  }
-                </select>
-              </div>
-
-              {/* Shift Select */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Shift</label>
-                <select
-                  value={selectedShift}
-                  onChange={(e) => setSelectedShift(e.target.value)}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="all">All Shifts</option>
-                  {availableShifts.map(shift => (
-                    <option key={shift} value={shift}>{shift}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Search Input */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
-                <div className="flex">
-                  <input
-                    type="text"
-                    placeholder="Search by name..."
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSearch();
-                      }
-                    }}
-                    className="w-full rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                  <button
-                    onClick={handleSearch}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-700 dark:hover:bg-indigo-800"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {loading && (
-            <div className="flex justify-center my-4">
-              <p className="text-gray-500 dark:text-gray-400">Loading data...</p>
-            </div>
-          )}
-          
-          {/* Table */}
-          <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {data.length === 0 ? (
-                  <tr>
-                    <td 
-                      colSpan={columns.length} 
-                      className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
                     >
-                      No records found for the selected filters
-                    </td>
-                  </tr>
-                ) : (
-                  table.getRowModel().rows.map((row) => (
-                    <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                      <option value="today">Today</option>
+                      <option value="week">Last 7 Days</option>
+                      <option value="month">Last 30 Days</option>
+                      <option value="year">Last Year</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
 
-          {/* Detailed Attendance Table Section */}
-          <div className="mt-8">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-4">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
-                Detailed Attendance Records
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Complete attendance information with sorting and pagination
-              </p>
-            </div>
-            
-            {attendanceError && (
-              <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4">
-                <div className="flex">
-                  <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-800 dark:text-red-200">
-                      Error loading attendance data: {attendanceError}
-                    </p>
+                  {/* Custom Date Inputs */}
+                  {dateRange === 'custom' && (
+                    <>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">From Date</label>
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">To Date</label>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Department Dropdown */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
+                    <select
+                      value={selectedDepartments.length > 0 ? selectedDepartments[0] : ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSelectedDepartments(value ? [value] : []);
+                      }}
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="">All Departments</option>
+                      {availableDepartments
+                        .filter(dept => dept !== "All Departments") // Avoid duplicate "All Departments" option
+                        .sort((a, b) => a.localeCompare(b)) // Sort departments alphabetically
+                        .map(dept => (
+                          <option key={dept} value={dept}>{dept}</option>
+                        ))
+                      }
+                    </select>
+                  </div>
+
+                  {/* Shift Select */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Shift</label>
+                    <select
+                      value={selectedShift}
+                      onChange={(e) => setSelectedShift(e.target.value)}
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="all">All Shifts</option>
+                      {availableShifts.map(shift => (
+                        <option key={shift} value={shift}>{shift}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Search Input */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                    <div className="flex">
+                      <input
+                        type="text"
+                        placeholder="Search by name..."
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSearch();
+                          }
+                        }}
+                        className="w-full rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      />
+                      <button
+                        onClick={handleSearch}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-700 dark:hover:bg-indigo-800"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            )}
-            
-            <AttendanceTable 
-              data={attendanceData} 
-              loading={attendanceLoading} 
-            />
+              
+              {loading && (
+                <div className="flex justify-center my-4">
+                  <p className="text-gray-500 dark:text-gray-400">Loading data...</p>
+                </div>
+              )}
+              
+              {/* Table */}
+              <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <tr key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <th
+                            key={header.id}
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {data.length === 0 ? (
+                      <tr>
+                        <td 
+                          colSpan={columns.length} 
+                          className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
+                          No records found for the selected filters
+                        </td>
+                      </tr>
+                    ) : (
+                      table.getRowModel().rows.map((row) => (
+                        <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          {row.getVisibleCells().map((cell) => (
+                            <td
+                              key={cell.id}
+                              className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Detailed Attendance Table Section */}
+              <div className="mt-8">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-4">
+                  <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                    Detailed Attendance Records
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Complete attendance information with sorting and pagination
+                  </p>
+                </div>
+                
+                {attendanceError && (
+                  <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4">
+                    <div className="flex">
+                      <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <div className="ml-3">
+                        <p className="text-sm text-red-800 dark:text-red-200">
+                          Error loading attendance data: {attendanceError}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <AttendanceTable 
+                  data={attendanceData} 
+                  loading={attendanceLoading} 
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </FilterProvider>
+        </FilterProvider>
+      </main>
+    </div>
   );
 }
