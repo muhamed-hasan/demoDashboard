@@ -55,13 +55,13 @@ function calculateHoursDifference(loginTime: string, logoutTime: string): number
   return Number((diffMinutes / 60).toFixed(2));
 }
 
-function generateLoginTime(shift: string, isLate: boolean): string {
+function generateLoginTime(shift: string | undefined, isLate: boolean): string {
   let baseHour: number;
   let baseMinute: number;
   let varianceMinutes: number;
   
   // Normalize shift values
-  const normalizedShift = shift.toLowerCase().trim();
+  const normalizedShift = (shift || 'day').toLowerCase().trim();
   
   if (normalizedShift === 'night') {
     // Night shift: 19:45–20:15
