@@ -135,6 +135,9 @@ export default function DataManagementPage() {
   // معالجة عمليات الحذف
   const handleDelete = (id: string) => {
     setError(null);
+    if (!window.confirm('هل أنت متأكد أنك تريد حذف هذا الموظف؟')) {
+      return;
+    }
     fetch(`/api/data?id=${id}`, { method: 'DELETE' })
       .then(async (res) => {
         if (!res.ok) {

@@ -193,6 +193,9 @@ export default function Home() {
         if (searchQuery) {
           params.append('search', searchQuery);
         }
+        if (uniquePerDay) {
+          params.append('uniquePerDay', 'true');
+        }
         
         const response = await fetch(`/api/table-data?${params}`);
         if (!response.ok) {
@@ -209,7 +212,7 @@ export default function Home() {
 
     fetchData();
     fetchStats();
-  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, refreshTrigger, fetchStats]);
+  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, refreshTrigger, fetchStats, uniquePerDay]);
 
   // Fetch initial data for departments and shifts on component mount
   useEffect(() => {
