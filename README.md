@@ -122,3 +122,173 @@ console.log(result.rows[0]);
 ```
 
 ---
+
+## 📋 توثيق جدول تفاصيل الموظفين (details)
+
+### اسم الجدول:
+`details`
+
+### أعمدة الجدول:
+
+| العمود         | النوع                        | الوصف                                                                 |
+|----------------|-----------------------------|-----------------------------------------------------------------------|
+| id             | INTEGER PRIMARY KEY         | رقم الموظف (معرّف فريد لكل موظف) - نفس الـ ID المستخدم في جدول table3 |
+| first_name     | VARCHAR(100) NOT NULL       | الاسم الأول للموظف                                                    |
+| last_name      | VARCHAR(100) NOT NULL       | اسم العائلة للموظف                                                    |
+| department     | VARCHAR(100) NOT NULL       | القسم أو المجموعة التي ينتمي إليها الموظف                             |
+| shift          | VARCHAR(50)                 | الشيفت (صباحي/مسائي) - قد يكون فارغاً                                |
+
+### مثال على البيانات:
+
+| id | first_name | last_name | department | shift |
+|----|------------|-----------|------------|-------|
+| 1  | Mahmoud    | Saad1     | SDS        |       |
+| 2  | Mahmoud    | Abdeltwab | Heidelberg |       |
+| 3  | Mohamed    | Salah     | Heidelberg |       |
+| 5  | Ahmed      | Hosny     | SDS        |       |
+| 7  | Hassan     | Mohammed Rashed | Naser | Day   |
+| 22 | Sayed      | Mohammmed Hussein | Naser | Night |
+
+### طريقة إنشاء الجدول وإدخال البيانات
+
+#### 1. من خلال واجهة الويب:
+- اذهب إلى صفحة "Details" من السايدبار
+- اضغط على زر "إنشاء جدول التفاصيل"
+- سيتم إنشاء الجدول تلقائياً وإدخال جميع البيانات من ملف `data.json`
+
+#### 2. من خلال API:
+```bash
+POST /api/details
+```
+
+#### 3. من خلال SQL مباشرة:
+```sql
+-- إنشاء الجدول
+CREATE TABLE details (
+  id INTEGER PRIMARY KEY,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  department VARCHAR(100) NOT NULL,
+  shift VARCHAR(50)
+);
+
+-- إدخال بيانات مثال
+INSERT INTO details (id, first_name, last_name, department, shift) 
+VALUES (1, 'Mahmoud', 'Saad1', 'SDS', '');
+```
+
+### أمثلة على الاستعلامات المفيدة
+
+#### 1. جلب جميع الموظفين في قسم معين:
+```sql
+SELECT * FROM details 
+WHERE department = 'Naser' 
+ORDER BY first_name;
+```
+
+#### 2. جلب الموظفين في شيفت معين:
+```sql
+SELECT * FROM details 
+WHERE shift = 'Day' 
+ORDER BY first_name;
+```
+
+#### 3. جلب الموظفين الذين ليس لديهم شيفت محدد:
+```sql
+SELECT * FROM details 
+WHERE shift IS NULL OR shift = '' 
+ORDER BY department, first_name;
+```
+
+#### 4. دمج بيانات الحضور مع تفاصيل الموظف:
+```sql
+SELECT 
+  t.id,
+  d.first_name,
+  d.last_name,
+  d.department,
+  d.shift,
+  t.time,
+  t.rname
+FROM table3 t
+JOIN details d ON t.id = d.id::text
+WHERE DATE(t.time) = '2025-04-14'
+ORDER BY t.time;
+```
+
+#### 5. إحصائيات حسب القسم:
+```sql
+SELECT 
+  department,
+  COUNT(*) as employee_count,
+  COUNT(CASE WHEN shift = 'Day' THEN 1 END) as day_shift_count,
+  COUNT(CASE WHEN shift = 'Night' THEN 1 END) as night_shift_count
+FROM details 
+GROUP BY department 
+ORDER BY employee_count DESC;
+```
+
+### استخدام الكود في Node.js (pg):
+
+```js
+const { Pool } = require('pg');
+const pool = new Pool({ /* إعدادات الاتصال */ });
+
+// جلب تفاصيل موظف معين
+const getEmployeeDetails = async (employeeId) => {
+  const result = await pool.query(
+    'SELECT * FROM details WHERE id = $1',
+    [employeeId]
+  );
+  return result.rows[0];
+};
+
+// جلب جميع الموظفين في قسم معين
+const getEmployeesByDepartment = async (department) => {
+  const result = await pool.query(
+    'SELECT * FROM details WHERE department = $1 ORDER BY first_name',
+    [department]
+  );
+  return result.rows;
+};
+
+// دمج بيانات الحضور مع تفاصيل الموظف
+const getAttendanceWithDetails = async (date) => {
+  const result = await pool.query(`
+    SELECT 
+      t.id,
+      d.first_name,
+      d.last_name,
+      d.department,
+      d.shift,
+      t.time,
+      t.rname
+    FROM table3 t
+    JOIN details d ON t.id = d.id::text
+    WHERE DATE(t.time) = $1
+    ORDER BY t.time
+  `, [date]);
+  return result.rows;
+};
+```
+
+### API Endpoints المتاحة:
+
+#### 1. إنشاء الجدول وإدخال البيانات:
+```bash
+POST /api/details
+```
+
+#### 2. جلب جميع البيانات:
+```bash
+GET /api/details
+```
+
+### ملاحظات مهمة:
+- جدول `details` يحتوي على البيانات الأساسية للموظفين من ملف `data.json`
+- الـ ID في جدول `details` يتطابق مع الـ ID في جدول `table3` (الحضور)
+- يمكن ربط الجداول باستخدام الـ ID للحصول على معلومات شاملة
+- الشيفت قد يكون فارغاً لبعض الموظفين
+- البيانات يتم تحديثها يدوياً من خلال واجهة الويب
+
+---
