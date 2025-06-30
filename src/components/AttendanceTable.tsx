@@ -9,7 +9,6 @@ import {
   getSortedRowModel,
   SortingState,
   getPaginationRowModel,
-  ColumnDef,
 } from '@tanstack/react-table';
 
 // Attendance data interface
@@ -60,7 +59,7 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
   };
 
   // Define columns
-  const columns = useMemo<ColumnDef<AttendanceData>[]>(() => [
+  const columns = useMemo(() => [
     columnHelper.accessor('date', {
       header: ({ column }) => (
         <button

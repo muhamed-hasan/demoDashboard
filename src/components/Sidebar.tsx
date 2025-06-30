@@ -3,6 +3,7 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { FaTachometerAlt, FaMoon, FaSun, FaDatabase } from 'react-icons/fa';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const THEME_COOKIE = 'theme';
 
@@ -10,6 +11,7 @@ const Sidebar = () => {
   const pathname = usePathname();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     setMounted(true);
@@ -40,18 +42,18 @@ const Sidebar = () => {
         <div className="bg-blue-600 rounded-lg p-2">
           <FaTachometerAlt className="text-2xl text-white" />
         </div>
-        <span className="text-2xl font-extrabold tracking-wide text-white">industry-run</span>
+        <span className="text-2xl font-extrabold tracking-wide text-white">{t('companyName')}</span>
       </div>
       {/* MENU */}
       <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         <div className="text-xs font-bold mb-2 mt-2 pl-2 text-gray-400">MENU</div>
         <Link href="/" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${pathname === '/' ? 'bg-[#2563eb] text-white' : 'hover:bg-[#232A47]'} ${theme === 'dark' ? 'hover:bg-[#1e293b]' : ''}`}>
           <FaTachometerAlt className="text-lg" />
-          <span>Dashboard</span>
+          <span>{t('dashboard')}</span>
         </Link>
         <Link href="/details" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${pathname === '/details' ? 'bg-[#2563eb] text-white' : 'hover:bg-[#232A47]'} ${theme === 'dark' ? 'hover:bg-[#1e293b]' : ''}`}>
           <FaDatabase className="text-lg" />
-          <span>Details</span>
+          <span>{t('details')}</span>
         </Link>
       </nav>
       <button
@@ -60,10 +62,10 @@ const Sidebar = () => {
         aria-label="Toggle dark mode"
       >
         {theme === 'dark' ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-gray-300" />}
-        {theme === 'dark' ? 'Light Theme' : 'Dark Theme'}
+        {theme === 'dark' ? t('lightTheme') : t('darkTheme')}
       </button>
       <div className="px-4 pb-4 mt-auto text-xs text-gray-400 text-center">
-        © 2024 Developed by industry-run
+        {t('copyright')}
       </div>
     </aside>
   );

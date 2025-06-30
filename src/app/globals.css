@@ -88,3 +88,71 @@ body {
 .dark .rounded-xl {
   background-color: #181f32 !important;
 }
+
+/* RTL Support */
+.rtl {
+  direction: rtl;
+}
+
+.rtl .text-left {
+  text-align: right;
+}
+
+.rtl .text-right {
+  text-align: left;
+}
+
+.rtl .float-left {
+  float: right;
+}
+
+.rtl .float-right {
+  float: left;
+}
+
+.rtl .ml-4 {
+  margin-left: 0;
+  margin-right: 1rem;
+}
+
+.rtl .mr-4 {
+  margin-right: 0;
+  margin-left: 1rem;
+}
+
+.rtl .pl-10 {
+  padding-left: 0;
+  padding-right: 2.5rem;
+}
+
+.rtl .pr-4 {
+  padding-right: 0;
+  padding-left: 1rem;
+}
+
+/* RTL sidebar positioning */
+.rtl .pl-64 {
+  padding-left: 0;
+  padding-right: 16rem;
+}
+
+.rtl .fixed {
+  left: auto;
+  right: 0;
+}
+
+/* RTL flex items */
+.rtl .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* RTL icons positioning */
+.rtl .absolute.left-3 {
+  left: auto;
+  right: 0.75rem;
+}
+
+.rtl .absolute.right-3 {
+  right: auto;
+  left: 0.75rem;
+}

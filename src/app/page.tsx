@@ -7,15 +7,12 @@ import {
   ArcElement,
   Tooltip,
   Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
 } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { FilterProvider } from '@/contexts/FilterContext';
 import AttendanceTable, { AttendanceData } from '@/components/AttendanceTable';
 import { useAttendanceData } from '@/hooks/useAttendanceData';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Register Chart.js components
 ChartJS.register(
@@ -45,6 +42,7 @@ interface AttendanceStats {
 }
 
 export default function Home() {
+  const { t } = useLanguage();
   const [data, setData] = useState<TableData[]>([]);
   const [stats, setStats] = useState<AttendanceStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -306,7 +304,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">جاري تحميل البيانات...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('loading')}</p>
         </div>
       </div>
     );
@@ -317,13 +315,13 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-600 dark:text-red-400 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">خطأ في تحميل البيانات</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{t('errorLoadingData')}</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
           >
-            إعادة المحاولة
+            {t('retry')}
           </button>
         </div>
       </div>
@@ -352,10 +350,10 @@ export default function Home() {
             <div className="mb-8">
               <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-[#264847]/30">
                 <h1 className="text-4xl font-bold text-[#264847] dark:text-white mb-3">
-                  لوحة تحكم الحضور والانصراف
+                  {t('attendanceDashboard')}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 text-lg">
-                  عرض إحصائيات الحضور والانصراف للموظفين
+                  {t('attendanceManagement')}
                 </p>
               </div>
             </div>
@@ -366,18 +364,18 @@ export default function Home() {
                 {/* Date Range */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    نطاق التاريخ
+                    {t('dateRange')}
                   </label>
                   <select
                     value={dateRange}
                     onChange={(e) => handleDateRangeChange(e.target.value as 'today' | 'week' | 'month' | 'year' | 'custom')}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                   >
-                    <option value="today">اليوم</option>
-                    <option value="week">آخر أسبوع</option>
-                    <option value="month">آخر شهر</option>
-                    <option value="year">آخر سنة</option>
-                    <option value="custom">مخصص</option>
+                    <option value="today">{t('today')}</option>
+                    <option value="week">{t('lastWeek')}</option>
+                    <option value="month">{t('lastMonth')}</option>
+                    <option value="year">{t('lastYear')}</option>
+                    <option value="custom">{t('custom')}</option>
                   </select>
                 </div>
 
@@ -386,7 +384,7 @@ export default function Home() {
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        من تاريخ
+                        {t('fromDate')}
                       </label>
                       <input
                         type="date"
@@ -397,7 +395,7 @@ export default function Home() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        إلى تاريخ
+                        {t('toDate')}
                       </label>
                       <input
                         type="date"
@@ -412,14 +410,14 @@ export default function Home() {
                 {/* Department Filter */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    القسم
+                    {t('department')}
                   </label>
                   <select
                     value={selectedDepartments[0] || ''}
                     onChange={(e) => setSelectedDepartments(e.target.value ? [e.target.value] : [])}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                   >
-                    <option value="">كل الأقسام</option>
+                    <option value="">{t('allDepartments')}</option>
                     {availableDepartments.map(dept => (
                       <option key={dept} value={dept}>{dept}</option>
                     ))}
@@ -429,14 +427,14 @@ export default function Home() {
                 {/* Shift Filter */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    الشيفت
+                    {t('shift')}
                   </label>
                   <select
                     value={selectedShift}
                     onChange={(e) => setSelectedShift(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                   >
-                    <option value="all">كل الشيفتات</option>
+                    <option value="all">{t('allShifts')}</option>
                     {availableShifts.map(shift => (
                       <option key={shift} value={shift}>{shift}</option>
                     ))}
@@ -446,12 +444,12 @@ export default function Home() {
                 {/* Search */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    البحث
+                    {t('search')}
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="البحث بالاسم..."
+                      placeholder={t('searchByName')}
                       value={searchText}
                       onChange={(e) => setSearchText(e.target.value)}
                       className="flex-1 px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
@@ -460,7 +458,7 @@ export default function Home() {
                       onClick={handleSearch}
                       className="px-6 py-3 bg-[#65b12a] hover:bg-[#264847] text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
                     >
-                      بحث
+                      {t('search')}
                     </button>
                   </div>
                 </div>
@@ -471,7 +469,7 @@ export default function Home() {
                     onClick={handleClearFilters}
                     className="w-full bg-gray-500 hover:bg-[#264847] text-white px-4 py-3 rounded-xl transition-all duration-200 font-semibold"
                   >
-                    مسح الفلاتر
+                    {t('clearFilters')}
                   </button>
                 </div>
               </div>
@@ -488,7 +486,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">إجمالي الموظفين</p>
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{t('totalEmployees')}</p>
                       <p className="text-3xl font-bold text-[#264847] dark:text-white">{stats.totalEmployees}</p>
                 </div>
               </div>
@@ -502,7 +500,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">الحضور</p>
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{t('present')}</p>
                       <p className="text-3xl font-bold text-[#65b12a]">{stats.presentCount}</p>
                 </div>
               </div>
@@ -516,7 +514,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">الغياب</p>
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{t('absent')}</p>
                       <p className="text-3xl font-bold text-red-500">{stats.absentCount}</p>
                 </div>
               </div>
@@ -530,7 +528,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">معدل الحضور</p>
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{t('attendanceRate')}</p>
                       <p className="text-3xl font-bold text-[#264847] dark:text-white">{stats.attendanceRate}%</p>
                 </div>
                   </div>
@@ -543,10 +541,10 @@ export default function Home() {
               <div className="grid md:grid-cols-2 gap-6 mb-8">
                 {/* Heidelberg Department */}
                 <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#264847]/30 hover:shadow-xl transition-all duration-200">
-                  <h3 className="text-xl font-bold text-[#264847] dark:text-white mb-4">قسم Heidelberg</h3>
+                  <h3 className="text-xl font-bold text-[#264847] dark:text-white mb-4">{t('heidelbergDept')}</h3>
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">معدل الحضور</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('attendanceRate')}</p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {stats.heidelbergStats.totalEmployees > 0 
                           ? ((stats.heidelbergStats.presentCount / stats.heidelbergStats.totalEmployees) * 100).toFixed(1)
@@ -556,7 +554,7 @@ export default function Home() {
                     <div className="w-24 h-24">
                   <Doughnut 
                     data={{
-                          labels: ['حاضر', 'غائب'],
+                          labels: [t('present'), t('absent')],
                       datasets: [{
                             data: [stats.heidelbergStats.presentCount, stats.heidelbergStats.absentCount],
                         backgroundColor: ['#10B981', '#EF4444'],
@@ -579,10 +577,10 @@ export default function Home() {
 
             {/* Naser Department */}
                 <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#264847]/30 hover:shadow-xl transition-all duration-200">
-                  <h3 className="text-xl font-bold text-[#264847] dark:text-white mb-4">قسم Naser</h3>
+                  <h3 className="text-xl font-bold text-[#264847] dark:text-white mb-4">{t('naserDept')}</h3>
                   <div className="flex items-center justify-between mb-4">
                 <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">معدل الحضور</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('attendanceRate')}</p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {stats.naserStats.totalEmployees > 0 
                           ? ((stats.naserStats.presentCount / stats.naserStats.totalEmployees) * 100).toFixed(1)
@@ -592,7 +590,7 @@ export default function Home() {
                     <div className="w-24 h-24">
                       <Doughnut
                         data={{
-                          labels: ['حاضر', 'غائب'],
+                          labels: [t('present'), t('absent')],
                           datasets: [{
                             data: [stats.naserStats.presentCount, stats.naserStats.absentCount],
                             backgroundColor: ['#10B981', '#EF4444'],
@@ -619,11 +617,11 @@ export default function Home() {
             {/* Attendance Table */}
             <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-[#264847]/30">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-[#264847] dark:text-white">جدول الحضور والانصراف</h2>
+                <h2 className="text-2xl font-bold text-[#264847] dark:text-white">{t('attendanceTable')}</h2>
                 <div className="flex items-center gap-4">
                   {/* Rows per page */}
                   <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-600 dark:text-gray-400">صفوف في الصفحة:</label>
+                    <label className="text-sm text-gray-600 dark:text-gray-400">{t('rowsPerPage')}</label>
                 <select
                       value={rowsPerPage}
                       onChange={(e) => handleRowsPerPageChange(Number(e.target.value))}
@@ -643,9 +641,9 @@ export default function Home() {
               {/* Pagination */}
               <div className="flex justify-between items-center mt-6">
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  عرض {((paginationInfo.currentPage - 1) * paginationInfo.limit) + 1} إلى{' '}
-                  {Math.min(paginationInfo.currentPage * paginationInfo.limit, paginationInfo.totalCount)} من{' '}
-                  {paginationInfo.totalCount} نتيجة
+                  {t('showing')} {((paginationInfo.currentPage - 1) * paginationInfo.limit) + 1} {t('to')}{' '}
+                  {Math.min(paginationInfo.currentPage * paginationInfo.limit, paginationInfo.totalCount)} {t('of')}{' '}
+                  {paginationInfo.totalCount} {t('results')}
               </div>
 
                 <div className="flex gap-2">
@@ -654,11 +652,11 @@ export default function Home() {
                     disabled={!paginationInfo.hasPrevPage}
                     className="px-4 py-2 border border-[#264847]/20 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#65b12a] hover:text-white transition-all duration-200 font-semibold text-[#264847] dark:text-white dark:border-[#264847]/30 dark:hover:bg-[#65b12a]"
                   >
-                    السابق
+                    {t('previous')}
                   </button>
                   
                   <span className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">
-                    صفحة {paginationInfo.currentPage} من {paginationInfo.totalPages}
+                    {t('page')} {paginationInfo.currentPage} {t('of')} {paginationInfo.totalPages}
                     </span>
                     
                     <button
@@ -666,7 +664,7 @@ export default function Home() {
                       disabled={!paginationInfo.hasNextPage}
                     className="px-4 py-2 border border-[#264847]/20 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#65b12a] hover:text-white transition-all duration-200 font-semibold text-[#264847] dark:text-white dark:border-[#264847]/30 dark:hover:bg-[#65b12a]"
                   >
-                    التالي
+                    {t('next')}
                     </button>
                   </div>
                 </div>
@@ -681,10 +679,10 @@ export default function Home() {
             <div className="mt-8">
               <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-8 mb-4 border border-gray-200 dark:border-[#264847]/30">
                 <h2 className="text-2xl font-bold text-[#264847] dark:text-white mb-2">
-                  Detailed Attendance Records
+                  {t('detailedAttendanceRecords')}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Complete attendance information with sorting and pagination
+                  {t('completeAttendanceInfo')}
                 </p>
               </div>
               
@@ -696,7 +694,7 @@ export default function Home() {
                     </svg>
                     <div className="ml-3">
                       <p className="text-sm text-red-800 dark:text-red-200 font-medium">
-                        Error loading attendance data: {attendanceError}
+                        {t('errorLoadingAttendance')} {attendanceError}
                       </p>
                     </div>
                   </div>
