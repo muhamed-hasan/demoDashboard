@@ -1,21 +1,16 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-// Function to format time to show only day and time
+// Function to format time to show only time (HH:MM AM/PM)
 function formatTime(dateTimeString: string): string {
   try {
     const date = new Date(dateTimeString);
-    const day = date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
     const time = date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
       hour12: true 
     });
-    return `${day} ${time}`;
+    return time;
   } catch (error) {
     return dateTimeString;
   }
@@ -117,7 +112,7 @@ export async function GET(request: Request) {
     const enrichedData = result.rows.map((row: any) => {
       return {
         id: row.id,
-        date: row.date || new Date(row.time).toISOString().split('T')[0],
+        date: row.date ? row.date.toString() : '',
         time: formatTime(row.time),
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         firstName: row.first_name || row.fname || '',

@@ -1,21 +1,16 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-// Function to format time to show only day and time
+// Function to format time to show only time (HH:MM AM/PM)
 function formatTime(dateTimeString: string): string {
   try {
     const date = new Date(dateTimeString);
-    const day = date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
     const time = date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
       hour12: true 
     });
-    return `${day} ${time}`;
+    return time;
   } catch (error) {
     return dateTimeString; // Return original if parsing fails
   }
@@ -161,7 +156,7 @@ export async function GET(request: Request) {
         shift: row.shift || '',
         department: row.department || row.group || '',
         // Additional fields from table3
-        date: row.date,
+        date: row.date ? row.date.toString() : '',
         time2: row.time2,
         rname: row.rname,
         card_number: row.card_number,
