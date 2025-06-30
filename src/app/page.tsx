@@ -475,13 +475,62 @@ export default function Home() {
                   <p className="text-xl font-bold text-red-600 dark:text-red-400">{stats?.heidelbergStats?.absentCount || 0}</p>
                 </div>
               </div>
-              <div className="text-center">
+              <div className="text-center mb-4">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Attendance Rate</p>
                 <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
                   {stats?.heidelbergStats?.totalEmployees && stats.heidelbergStats.totalEmployees > 0 
                     ? `${((stats.heidelbergStats.presentCount / stats.heidelbergStats.totalEmployees) * 100).toFixed(1)}%`
                     : '0%'}
                 </p>
+              </div>
+              {/* Heidelberg Pie Chart */}
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center mb-2">Attendance Distribution</h4>
+                <div className="h-48">
+                  <Doughnut 
+                    data={{
+                      labels: ['Present', 'Absent'],
+                      datasets: [{
+                        data: [
+                          stats?.heidelbergStats?.presentCount || 0,
+                          stats?.heidelbergStats?.absentCount || 0
+                        ],
+                        backgroundColor: ['#10B981', '#EF4444'],
+                        hoverBackgroundColor: ['#059669', '#DC2626'],
+                        borderWidth: 0
+                      }]
+                    }} 
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            color: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#6B7280',
+                            font: {
+                              size: 12
+                            }
+                          }
+                        },
+                        tooltip: {
+                          backgroundColor: document.documentElement.classList.contains('dark') ? '#374151' : '#FFFFFF',
+                          titleColor: document.documentElement.classList.contains('dark') ? '#F9FAFB' : '#111827',
+                          bodyColor: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#6B7280',
+                          borderColor: document.documentElement.classList.contains('dark') ? '#4B5563' : '#E5E7EB',
+                          borderWidth: 1,
+                          callbacks: {
+                            label: function(context) {
+                              const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                              const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : '0';
+                              return `${context.label}: ${context.parsed} (${percentage}%)`;
+                            }
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -520,13 +569,62 @@ export default function Home() {
                   <p className="text-xl font-bold text-red-600 dark:text-red-400">{stats?.naserStats?.absentCount || 0}</p>
                 </div>
               </div>
-              <div className="text-center">
+              <div className="text-center mb-4">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Attendance Rate</p>
                 <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
                   {stats?.naserStats?.totalEmployees && stats.naserStats.totalEmployees > 0 
                     ? `${((stats.naserStats.presentCount / stats.naserStats.totalEmployees) * 100).toFixed(1)}%`
                     : '0%'}
                 </p>
+              </div>
+              {/* Naser Pie Chart */}
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center mb-2">Attendance Distribution</h4>
+                <div className="h-48">
+                  <Doughnut 
+                    data={{
+                      labels: ['Present', 'Absent'],
+                      datasets: [{
+                        data: [
+                          stats?.naserStats?.presentCount || 0,
+                          stats?.naserStats?.absentCount || 0
+                        ],
+                        backgroundColor: ['#10B981', '#EF4444'],
+                        hoverBackgroundColor: ['#059669', '#DC2626'],
+                        borderWidth: 0
+                      }]
+                    }} 
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            color: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#6B7280',
+                            font: {
+                              size: 12
+                            }
+                          }
+                        },
+                        tooltip: {
+                          backgroundColor: document.documentElement.classList.contains('dark') ? '#374151' : '#FFFFFF',
+                          titleColor: document.documentElement.classList.contains('dark') ? '#F9FAFB' : '#111827',
+                          bodyColor: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#6B7280',
+                          borderColor: document.documentElement.classList.contains('dark') ? '#4B5563' : '#E5E7EB',
+                          borderWidth: 1,
+                          callbacks: {
+                            label: function(context) {
+                              const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                              const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : '0';
+                              return `${context.label}: ${context.parsed} (${percentage}%)`;
+                            }
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
