@@ -62,10 +62,9 @@ export async function GET(request: Request) {
 
     // Department filter
     if (departments.length > 0) {
-      const deptConditions = departments.map((_, index) => `d.department = $${paramIndex + index}`);
-      whereConditions.push(`(${deptConditions.join(' OR ')})`);
-      values.push(...departments);
-      paramIndex += departments.length;
+      whereConditions.push(`d.department = $${paramIndex}`);
+      values.push(departments[0]); // Take only the first department
+      paramIndex += 1;
     }
 
     // Shift filter

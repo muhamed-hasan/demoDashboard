@@ -19,9 +19,6 @@ export interface AttendanceData {
   department: string;
   shift: string;
   login: string | null;
-  logout: string | null;
-  hours: number;
-  status: 'Present' | 'Late' | 'Absent' | 'Early Leave' | 'Partial Day';
 }
 
 interface AttendanceTableProps {
@@ -33,26 +30,6 @@ const columnHelper = createColumnHelper<AttendanceData>();
 
 export default function AttendanceTable({ data, loading = false }: AttendanceTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
-
-  // Status badge styling
-  const getStatusBadge = (status: AttendanceData['status']) => {
-    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
-    
-    switch (status) {
-      case 'Present':
-        return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`;
-      case 'Late':
-        return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`;
-      case 'Absent':
-        return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200`;
-      case 'Early Leave':
-        return `${baseClasses} bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200`;
-      case 'Partial Day':
-        return `${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200`;
-      default:
-        return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`;
-    }
-  };
 
   // Define columns
   const columns = useMemo(() => [
@@ -152,66 +129,13 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
       },
     }),
     columnHelper.accessor('login', {
-      header: 'Login',
+      header: 'Login Time',
       cell: ({ getValue }) => {
         const login = getValue();
         return login ? (
           <span className="font-mono text-sm">{login}</span>
         ) : (
           <span className="text-gray-400 text-sm">--</span>
-        );
-      },
-    }),
-    columnHelper.accessor('logout', {
-      header: 'Logout',
-      cell: ({ getValue }) => {
-        const logout = getValue();
-        return logout ? (
-          <span className="font-mono text-sm">{logout}</span>
-        ) : (
-          <span className="text-gray-400 text-sm">--</span>
-        );
-      },
-    }),
-    columnHelper.accessor('hours', {
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-1 text-left font-medium"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          <span>Hours</span>
-          <span className="text-xs">
-            {column.getIsSorted() === 'asc' ? '↑' : column.getIsSorted() === 'desc' ? '↓' : '↕'}
-          </span>
-        </button>
-      ),
-      cell: ({ getValue }) => {
-        const hours = getValue();
-        return (
-          <span className="font-mono text-sm">
-            {hours > 0 ? `${hours.toFixed(2)}h` : '--'}
-          </span>
-        );
-      },
-    }),
-    columnHelper.accessor('status', {
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-1 text-left font-medium"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          <span>Status</span>
-          <span className="text-xs">
-            {column.getIsSorted() === 'asc' ? '↑' : column.getIsSorted() === 'desc' ? '↓' : '↕'}
-          </span>
-        </button>
-      ),
-      cell: ({ getValue }) => {
-        const status = getValue();
-        return (
-          <span className={getStatusBadge(status)}>
-            {status}
-          </span>
         );
       },
     }),

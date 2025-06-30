@@ -41,6 +41,16 @@ interface AttendanceStats {
   attendanceRate: number;
   deptDistribution: { [key: string]: number };
   shiftDistribution: { [key: string]: number };
+  heidelbergStats?: {
+    totalEmployees: number;
+    presentCount: number;
+    absentCount: number;
+  };
+  naserStats?: {
+    totalEmployees: number;
+    presentCount: number;
+    absentCount: number;
+  };
 }
 
 export default function Home() {
@@ -275,10 +285,7 @@ export default function Home() {
     name: item.fullName,
     department: item.department,
     shift: item.shift,
-    login: item.time,
-    logout: null,
-    hours: 0,
-    status: 'Present' as const
+    login: item.time
   }));
 
   if (loading && data.length === 0) {
@@ -404,7 +411,7 @@ export default function Home() {
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-red-100 dark:bg-red-900">
                   <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
                 <div className="ml-4">
@@ -427,6 +434,99 @@ export default function Home() {
                         {stats?.attendanceRate ? `${stats.attendanceRate.toFixed(1)}%` : '0%'}
                       </p>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Department Specific Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Heidelberg Department */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                Heidelberg Department
+              </h3>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="text-center">
+                  <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900 mx-auto w-12 h-12 flex items-center justify-center mb-2">
+                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">{stats?.heidelbergStats?.totalEmployees || 0}</p>
+                </div>
+                <div className="text-center">
+                  <div className="p-3 rounded-full bg-green-100 dark:bg-green-900 mx-auto w-12 h-12 flex items-center justify-center mb-2">
+                    <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Present</p>
+                  <p className="text-xl font-bold text-green-600 dark:text-green-400">{stats?.heidelbergStats?.presentCount || 0}</p>
+                </div>
+                <div className="text-center">
+                  <div className="p-3 rounded-full bg-red-100 dark:bg-red-900 mx-auto w-12 h-12 flex items-center justify-center mb-2">
+                    <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Absent</p>
+                  <p className="text-xl font-bold text-red-600 dark:text-red-400">{stats?.heidelbergStats?.absentCount || 0}</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Attendance Rate</p>
+                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  {stats?.heidelbergStats?.totalEmployees && stats.heidelbergStats.totalEmployees > 0 
+                    ? `${((stats.heidelbergStats.presentCount / stats.heidelbergStats.totalEmployees) * 100).toFixed(1)}%`
+                    : '0%'}
+                </p>
+              </div>
+            </div>
+
+            {/* Naser Department */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                Naser Department
+              </h3>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="text-center">
+                  <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900 mx-auto w-12 h-12 flex items-center justify-center mb-2">
+                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">{stats?.naserStats?.totalEmployees || 0}</p>
+                </div>
+                <div className="text-center">
+                  <div className="p-3 rounded-full bg-green-100 dark:bg-green-900 mx-auto w-12 h-12 flex items-center justify-center mb-2">
+                    <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Present</p>
+                  <p className="text-xl font-bold text-green-600 dark:text-green-400">{stats?.naserStats?.presentCount || 0}</p>
+                </div>
+                <div className="text-center">
+                  <div className="p-3 rounded-full bg-red-100 dark:bg-red-900 mx-auto w-12 h-12 flex items-center justify-center mb-2">
+                    <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Absent</p>
+                  <p className="text-xl font-bold text-red-600 dark:text-red-400">{stats?.naserStats?.absentCount || 0}</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Attendance Rate</p>
+                <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                  {stats?.naserStats?.totalEmployees && stats.naserStats.totalEmployees > 0 
+                    ? `${((stats.naserStats.presentCount / stats.naserStats.totalEmployees) * 100).toFixed(1)}%`
+                    : '0%'}
+                </p>
               </div>
             </div>
           </div>
@@ -501,23 +601,22 @@ export default function Home() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Department
                     </label>
-                <select
-                      multiple
-                      value={selectedDepartments}
-                  onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions, option => option.value);
-                        setSelectedDepartments(selected);
-                  }}
+                    <select
+                      value={selectedDepartments.length > 0 ? selectedDepartments[0] : ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSelectedDepartments(value ? [value] : []);
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="">All Departments</option>
+                    >
+                      <option value="">All Departments</option>
                       {availableDepartments.map((dept) => (
                         <option key={dept} value={dept}>
                           {dept}
                         </option>
                       ))}
-                </select>
-              </div>
+                    </select>
+                  </div>
 
                   {/* Shift Filter */}
                   <div>

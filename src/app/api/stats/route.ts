@@ -36,10 +36,9 @@ export async function GET(request: Request) {
 
     // Department filter
     if (departments.length > 0) {
-      const deptConditions = departments.map((_, index) => `d.department = $${paramIndex + index}`);
-      whereConditions.push(`(${deptConditions.join(' OR ')})`);
-      values.push(...departments);
-      paramIndex += departments.length;
+      whereConditions.push(`d.department = $${paramIndex}`);
+      values.push(departments[0]); // Take only the first department
+      paramIndex += 1;
     }
 
     // Shift filter
@@ -75,9 +74,8 @@ export async function GET(request: Request) {
 
     // Apply same filters to total employees count
     if (departments.length > 0) {
-      const deptConditions = departments.map((_, index) => `department = $${index + 1}`);
-      totalEmployeesConditions.push(`(${deptConditions.join(' OR ')})`);
-      totalEmployeesValues.push(...departments);
+      totalEmployeesConditions.push(`department = $${totalEmployeesValues.length + 1}`);
+      totalEmployeesValues.push(departments[0]); // Take only the first department
     }
 
     if (shift && shift !== 'all') {
@@ -142,13 +140,63 @@ export async function GET(request: Request) {
       }
     });
 
+    // Calculate Heidelberg department stats
+    const heidelbergQuery = `
+      SELECT COUNT(*) as total_employees
+      FROM details 
+      WHERE department = 'Heidelberg'
+    `;
+    const heidelbergTotalResult = await pool.query(heidelbergQuery);
+    const heidelbergTotalEmployees = parseInt(heidelbergTotalResult.rows[0].total_employees);
+
+    const heidelbergAttendanceQuery = `
+      SELECT DISTINCT t.id
+      FROM table3 t
+      LEFT JOIN details d ON t.id = d.id::text
+      WHERE d.department = 'Heidelberg'
+      ${whereConditions.length > 0 ? 'AND ' + whereConditions.join(' AND ') : ''}
+    `;
+    const heidelbergAttendanceResult = await pool.query(heidelbergAttendanceQuery, values);
+    const heidelbergPresentCount = heidelbergAttendanceResult.rows.length;
+    const heidelbergAbsentCount = heidelbergTotalEmployees - heidelbergPresentCount;
+
+    // Calculate Naser department stats
+    const naserQuery = `
+      SELECT COUNT(*) as total_employees
+      FROM details 
+      WHERE department = 'Naser'
+    `;
+    const naserTotalResult = await pool.query(naserQuery);
+    const naserTotalEmployees = parseInt(naserTotalResult.rows[0].total_employees);
+
+    const naserAttendanceQuery = `
+      SELECT DISTINCT t.id
+      FROM table3 t
+      LEFT JOIN details d ON t.id = d.id::text
+      WHERE d.department = 'Naser'
+      ${whereConditions.length > 0 ? 'AND ' + whereConditions.join(' AND ') : ''}
+    `;
+    const naserAttendanceResult = await pool.query(naserAttendanceQuery, values);
+    const naserPresentCount = naserAttendanceResult.rows.length;
+    const naserAbsentCount = naserTotalEmployees - naserPresentCount;
+
     const stats = {
       totalEmployees,
       presentCount,
       absentCount,
       attendanceRate: parseFloat(attendanceRate),
       deptDistribution,
-      shiftDistribution
+      shiftDistribution,
+      heidelbergStats: {
+        totalEmployees: heidelbergTotalEmployees,
+        presentCount: heidelbergPresentCount,
+        absentCount: heidelbergAbsentCount
+      },
+      naserStats: {
+        totalEmployees: naserTotalEmployees,
+        presentCount: naserPresentCount,
+        absentCount: naserAbsentCount
+      }
     };
 
     return NextResponse.json(stats);
