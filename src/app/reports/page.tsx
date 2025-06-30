@@ -3,14 +3,14 @@ import React, { useState, useEffect } from "react";
 
 interface AttendanceRecord {
   id: string;
-  fullName: string;
+  name: string;
   department: string;
   shift: string;
-  date: string;
-  firstLogin: string;
-  lastLogout: string;
+  login: string | null;
+  logout: string | null;
   hours: number;
-  totalRecords: number;
+  date: string;
+  status: string;
 }
 
 export default function ReportsPage() {
@@ -26,7 +26,7 @@ export default function ReportsPage() {
     setLoading(true);
     setError(null);
     
-    fetch(`/api/reports?start=${selectedDate}&end=${selectedDate}`)
+    fetch(`/api/attendance-details?startDate=${selectedDate}&endDate=${selectedDate}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch data");
         return res.json();
@@ -75,7 +75,7 @@ export default function ReportsPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">أول تسجيل دخول</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">آخر تسجيل خروج</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ساعات العمل</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">عدد التسجيلات</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الحالة</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -87,16 +87,28 @@ export default function ReportsPage() {
               </tr>
             ) : (
               records.map((rec) => (
-                <tr key={rec.id + rec.date} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                <tr key={rec.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">{rec.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.fullName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.department}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.shift}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.firstLogin}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.lastLogout}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.login || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.logout || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.hours} ساعة</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.totalRecords}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      rec.status === 'Present' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                      rec.status === 'Partial Day' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                      rec.status === 'Early Leave' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
+                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    }`}>
+                      {rec.status === 'Present' ? 'حاضر' :
+                       rec.status === 'Partial Day' ? 'يوم جزئي' :
+                       rec.status === 'Early Leave' ? 'مغادرة مبكرة' :
+                       'غائب'}
+                    </span>
+                  </td>
                 </tr>
               ))
             )}

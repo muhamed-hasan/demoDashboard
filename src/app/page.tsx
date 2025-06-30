@@ -642,7 +642,7 @@ export default function Home() {
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Shift Distribution</h3>
               <div className="h-64">
                   <Bar data={barData} options={chartOptions} />
-                  </div>
+              </div>
             </div>
           </div>
 
@@ -699,22 +699,22 @@ export default function Home() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Department
                     </label>
-                    <select
-                      value={selectedDepartments.length > 0 ? selectedDepartments[0] : ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setSelectedDepartments(value ? [value] : []);
-                      }}
+                <select
+                  value={selectedDepartments.length > 0 ? selectedDepartments[0] : ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedDepartments(value ? [value] : []);
+                  }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    >
-                      <option value="">All Departments</option>
+                >
+                  <option value="">All Departments</option>
                       {availableDepartments.map((dept) => (
                         <option key={dept} value={dept}>
                           {dept}
                         </option>
                       ))}
-                    </select>
-                  </div>
+                </select>
+              </div>
 
                   {/* Shift Filter */}
                   <div>

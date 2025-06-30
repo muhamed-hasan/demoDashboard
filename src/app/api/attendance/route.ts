@@ -1,38 +1,23 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-// Function to format time to show only time (HH:MM AM/PM)
+// Function to format time to show only day and time
 function formatTime(dateTimeString: string): string {
   try {
     const date = new Date(dateTimeString);
+    const day = date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
     const time = date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
       hour12: true 
     });
-    return time;
+    return `${day} ${time}`;
   } catch (error) {
     return dateTimeString;
-  }
-}
-
-// Function to format date properly
-function formatDate(dateValue: any): string {
-  try {
-    if (!dateValue) return '';
-    
-    // If it's already a string in YYYY-MM-DD format, return it
-    if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      return dateValue;
-    }
-    
-    // If it's a Date object or timestamp, convert it
-    const date = new Date(dateValue);
-    if (isNaN(date.getTime())) return '';
-    
-    return date.toISOString().split('T')[0];
-  } catch (error) {
-    return '';
   }
 }
 
@@ -56,15 +41,15 @@ export async function GET(request: Request) {
 
     // Date range filter
     if (startDate && endDate) {
-      whereConditions.push(`t.date >= $${paramIndex} AND t.date <= $${paramIndex + 1}`);
+      whereConditions.push(`DATE(t.time) >= $${paramIndex} AND DATE(t.time) <= $${paramIndex + 1}`);
       values.push(startDate, endDate);
       paramIndex += 2;
     } else if (startDate) {
-      whereConditions.push(`t.date >= $${paramIndex}`);
+      whereConditions.push(`DATE(t.time) >= $${paramIndex}`);
       values.push(startDate);
       paramIndex += 1;
     } else if (endDate) {
-      whereConditions.push(`t.date <= $${paramIndex}`);
+      whereConditions.push(`DATE(t.time) <= $${paramIndex}`);
       values.push(endDate);
       paramIndex += 1;
     }
@@ -132,7 +117,7 @@ export async function GET(request: Request) {
     const enrichedData = result.rows.map((row: any) => {
       return {
         id: row.id,
-        date: row.date,
+        date: row.date || new Date(row.time).toISOString().split('T')[0],
         time: formatTime(row.time),
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         firstName: row.first_name || row.fname || '',
