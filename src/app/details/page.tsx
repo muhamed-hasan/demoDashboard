@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { FaDatabase, FaUsers, FaSearch, FaFilter, FaTrash, FaEdit, FaPlus, FaTimes } from 'react-icons/fa';
+import { FaDatabase, FaUsers, FaSearch, FaFilter, FaTrash, FaPlus, FaTimes } from 'react-icons/fa';
 
 interface EmployeeDetail {
   id: number;
@@ -54,7 +54,6 @@ export default function DetailsPage() {
 
   // Available departments and shifts for form
   const availableDepartments = ['SDS', 'Heidelberg', 'Abo Kastore', 'Naser', 'All Departments'];
-  const availableShifts = ['Day', 'Night', ''];
 
   useEffect(() => {
     fetchEmployees();

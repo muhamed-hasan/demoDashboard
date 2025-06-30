@@ -3,11 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { TableData } from '@/types/table';
 import {
-  createColumnHelper,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import {
   Chart as ChartJS,
   ArcElement,
   Tooltip,
@@ -18,7 +13,7 @@ import {
   Title,
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
-import { FilterProvider, FilterContextType } from '@/contexts/FilterContext';
+import { FilterProvider } from '@/contexts/FilterContext';
 import AttendanceTable, { AttendanceData } from '@/components/AttendanceTable';
 
 // Register Chart.js components
@@ -77,16 +72,6 @@ export default function Home() {
     hasPrevPage: false,
     limit: 10
   });
-
-  const columnHelper = createColumnHelper<TableData>();
-
-  const columns = [
-    columnHelper.accessor('id', { header: 'ID' }),
-    columnHelper.accessor('time', { header: 'Time' }),
-    columnHelper.accessor('fullName', { header: 'Full Name' }),
-    columnHelper.accessor('shift', { header: 'Shift' }),
-    columnHelper.accessor('department', { header: 'Department' }),
-  ];
 
   const handleDateRangeChange = (range: 'today' | 'week' | 'month' | 'year' | 'custom') => {
     const today = new Date();
