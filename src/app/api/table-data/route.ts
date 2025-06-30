@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     // Build the JOIN query with filters
     let baseQuery = `
       FROM table3 t
-      LEFT JOIN details d ON CAST(t.id AS TEXT) = d.id
+      LEFT JOIN details d ON t.id = d.id::text
     `;
     let whereConditions: string[] = [];
     let values: any[] = [];
@@ -193,6 +193,13 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Error fetching data:', error);
-    return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    return NextResponse.json({ 
+      error: 'Failed to fetch data',
+      message: errorMessage,
+      stack: errorStack
+    }, { status: 500 });
   }
 }

@@ -200,7 +200,7 @@ export default function Home() {
           console.log('Set pagination info:', result.pagination);
         } else {
           // Fallback for old format
-          setData(result);
+        setData(result);
           setPaginationInfo({
             currentPage: page,
             totalPages: Math.ceil(result.length / rowsPerPage),
@@ -237,9 +237,9 @@ export default function Home() {
         if (detailsResponse.ok) {
           const detailsData = await detailsResponse.json();
           if (detailsData.success && detailsData.data) {
-            const departments = new Set<string>();
+          const departments = new Set<string>();
             const shifts = new Set<string>();
-            
+          
             // Extract all unique departments and shifts from details table
             detailsData.data.forEach((employee: any) => {
               if (employee.department) {
@@ -247,9 +247,9 @@ export default function Home() {
               }
               if (employee.shift) {
                 shifts.add(employee.shift);
-              }
-            });
-            
+            }
+          });
+          
             // Convert Sets to Arrays and set available departments and shifts
             setAvailableDepartments(Array.from(departments).sort());
             setAvailableShifts(Array.from(shifts).sort());
@@ -365,91 +365,91 @@ export default function Home() {
   return (
     <div className="flex">
       <main className="flex-1 p-4">
-        <FilterProvider value={filterContextValue}>
-          <div className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
-            <div className="max-w-screen-2xl mx-auto">
-              <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">Attendance Dashboard</h1>
-              
-              {/* Overview Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                  <div className="flex items-center">
-                    <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
-                      <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Employees</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalEmployees || 0}</p>
-                    </div>
-                  </div>
+    <FilterProvider value={filterContextValue}>
+      <div className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-screen-2xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">Attendance Dashboard</h1>
+          
+          {/* Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                  <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
                 </div>
-
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                  <div className="flex items-center">
-                    <div className="p-3 rounded-full bg-green-100 dark:bg-green-900">
-                      <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Present</p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.presentCount || 0}</p>
-                    </div>
-                  </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Employees</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalEmployees || 0}</p>
                 </div>
+              </div>
+            </div>
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                  <div className="flex items-center">
-                    <div className="p-3 rounded-full bg-red-100 dark:bg-red-900">
-                      <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Absent</p>
-                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats?.absentCount || 0}</p>
-                    </div>
-                  </div>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                  <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Present</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.presentCount || 0}</p>
+                </div>
+              </div>
+            </div>
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                  <div className="flex items-center">
-                    <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
-                      <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Attendance Rate</p>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-red-100 dark:bg-red-900">
+                  <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Absent</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats?.absentCount || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
+                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Attendance Rate</p>
                       <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                         {stats?.attendanceRate ? `${stats.attendanceRate.toFixed(1)}%` : '0%'}
                       </p>
-                    </div>
-                  </div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Charts Section */}
+          {/* Charts Section */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Department Distribution</h3>
-                  <div className="h-64">
-                    <Doughnut data={doughnutData} options={chartOptions} />
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Shift Distribution</h3>
-                  <div className="h-64">
-                    <Bar data={barData} options={chartOptions} />
-                  </div>
-                </div>
+              <div className="h-64">
+                  <Doughnut data={doughnutData} options={chartOptions} />
               </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Shift Distribution</h3>
+              <div className="h-64">
+                  <Bar data={barData} options={chartOptions} />
+                  </div>
+            </div>
+          </div>
 
               {/* Filters Section */}
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Date Range */}
@@ -457,18 +457,18 @@ export default function Home() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Date Range
                     </label>
-                    <select
-                      value={dateRange}
+                <select
+                  value={dateRange}
                       onChange={(e) => handleDateRangeChange(e.target.value as any)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    >
-                      <option value="today">Today</option>
-                      <option value="week">Last 7 Days</option>
-                      <option value="month">Last 30 Days</option>
-                      <option value="year">Last Year</option>
+                >
+                  <option value="today">Today</option>
+                  <option value="week">Last 7 Days</option>
+                  <option value="month">Last 30 Days</option>
+                  <option value="year">Last Year</option>
                       <option value="custom">Custom Range</option>
-                    </select>
-                  </div>
+                </select>
+              </div>
 
                   {/* Start Date */}
                   <div>
@@ -501,67 +501,67 @@ export default function Home() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Department
                     </label>
-                    <select
+                <select
                       multiple
                       value={selectedDepartments}
-                      onChange={(e) => {
+                  onChange={(e) => {
                         const selected = Array.from(e.target.selectedOptions, option => option.value);
                         setSelectedDepartments(selected);
-                      }}
+                  }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    >
-                      <option value="">All Departments</option>
+                >
+                  <option value="">All Departments</option>
                       {availableDepartments.map((dept) => (
                         <option key={dept} value={dept}>
                           {dept}
                         </option>
                       ))}
-                    </select>
-                  </div>
+                </select>
+              </div>
 
                   {/* Shift Filter */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Shift
                     </label>
-                    <select
-                      value={selectedShift}
-                      onChange={(e) => setSelectedShift(e.target.value)}
+                <select
+                  value={selectedShift}
+                  onChange={(e) => setSelectedShift(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    >
-                      <option value="all">All Shifts</option>
+                >
+                  <option value="all">All Shifts</option>
                       {availableShifts.map((shift) => (
                         <option key={shift} value={shift}>
                           {shift}
                         </option>
-                      ))}
-                    </select>
-                  </div>
+                  ))}
+                </select>
+              </div>
 
                   {/* Search */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Search
                     </label>
-                    <div className="flex">
-                      <input
-                        type="text"
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
                         placeholder="Search by name, department..."
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      />
-                      <button
-                        onClick={handleSearch}
+                  />
+                  <button
+                    onClick={handleSearch}
                         className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                      >
+                  >
                         Search
-                      </button>
-                    </div>
-                  </div>
+                  </button>
                 </div>
               </div>
-
+            </div>
+          </div>
+          
               {/* Pagination Controls */}
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-8">
                 <div className="flex items-center justify-between">
@@ -644,16 +644,16 @@ export default function Home() {
                   Debug: Page={page}, TotalPages={paginationInfo.totalPages}, TotalCount={paginationInfo.totalCount}, HasNext={paginationInfo.hasNextPage}, HasPrev={paginationInfo.hasPrevPage}
                 </div>
               </div>
-
+            
               {/* Attendance Table */}
-              <AttendanceTable 
-                data={attendanceData} 
+            <AttendanceTable 
+              data={attendanceData} 
                 loading={loading} 
-              />
-            </div>
+            />
           </div>
+        </div>
         </FilterProvider>
       </main>
-    </div>
+      </div>
   );
 }
