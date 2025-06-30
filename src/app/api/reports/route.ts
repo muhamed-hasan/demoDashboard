@@ -63,12 +63,15 @@ export async function GET(request: Request) {
     const reportsData = result.rows.map((row: any) => {
       const hours = calculateHours(row.first_login, row.last_logout);
       
+      // Format date to show only the date part (YYYY-MM-DD)
+      const formattedDate = row.date ? new Date(row.date).toISOString().split('T')[0] : '';
+      
       return {
         id: row.id,
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : 'غير محدد',
         department: row.department || 'غير محدد',
         shift: row.shift || 'غير محدد',
-        date: row.date,
+        date: formattedDate,
         firstLogin: formatTimeOnly(row.first_login),
         lastLogout: formatTimeOnly(row.last_logout),
         hours: hours,
