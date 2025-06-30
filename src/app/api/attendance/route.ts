@@ -16,6 +16,26 @@ function formatTime(dateTimeString: string): string {
   }
 }
 
+// Function to format date properly
+function formatDate(dateValue: any): string {
+  try {
+    if (!dateValue) return '';
+    
+    // If it's already a string in YYYY-MM-DD format, return it
+    if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return dateValue;
+    }
+    
+    // If it's a Date object or timestamp, convert it
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return '';
+    
+    return date.toISOString().split('T')[0];
+  } catch (error) {
+    return '';
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -112,7 +132,7 @@ export async function GET(request: Request) {
     const enrichedData = result.rows.map((row: any) => {
       return {
         id: row.id,
-        date: row.date || '',
+        date: formatDate(row.date),
         time: formatTime(row.time),
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         firstName: row.first_name || row.fname || '',

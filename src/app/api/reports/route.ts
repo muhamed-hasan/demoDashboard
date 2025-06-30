@@ -28,6 +28,26 @@ function calculateHours(startTime: string, endTime: string): number {
   }
 }
 
+// Function to format date properly
+function formatDate(dateValue: any): string {
+  try {
+    if (!dateValue) return '';
+    
+    // If it's already a string in YYYY-MM-DD format, return it
+    if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return dateValue;
+    }
+    
+    // If it's a Date object or timestamp, convert it
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return '';
+    
+    return date.toISOString().split('T')[0];
+  } catch (error) {
+    return '';
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -64,7 +84,7 @@ export async function GET(request: Request) {
       const hours = calculateHours(row.first_login, row.last_logout);
       
       // Use the date directly from database (it's already a date type)
-      const formattedDate = row.date || '';
+      const formattedDate = formatDate(row.date);
       
       return {
         id: row.id,
