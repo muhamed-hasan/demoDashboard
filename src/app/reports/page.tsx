@@ -3,14 +3,14 @@ import React, { useState, useEffect } from "react";
 
 interface AttendanceRecord {
   id: string;
-  name: string;
+  fullName: string;
   department: string;
   shift: string;
-  login: string | null;
-  logout: string | null;
-  hours: number;
   date: string;
-  status: string;
+  time: string | null;
+  time2?: string | null;
+  card_number?: string | null;
+  dev?: string | null;
 }
 
 export default function ReportsPage() {
@@ -26,7 +26,7 @@ export default function ReportsPage() {
     setLoading(true);
     setError(null);
     
-    fetch(`/api/attendance-details?startDate=${selectedDate}&endDate=${selectedDate}`)
+    fetch(`/api/attendance?start=${selectedDate}&end=${selectedDate}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch data");
         return res.json();
@@ -87,28 +87,16 @@ export default function ReportsPage() {
               </tr>
             ) : (
               records.map((rec) => (
-                <tr key={rec.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                <tr key={rec.id + rec.date} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">{rec.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.fullName}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.department}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.shift}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.login || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.logout || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.hours} ساعة</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      rec.status === 'Present' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                      rec.status === 'Partial Day' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                      rec.status === 'Early Leave' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
-                      {rec.status === 'Present' ? 'حاضر' :
-                       rec.status === 'Partial Day' ? 'يوم جزئي' :
-                       rec.status === 'Early Leave' ? 'مغادرة مبكرة' :
-                       'غائب'}
-                    </span>
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.time || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.time2 || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.card_number || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.dev || '-'}</td>
                 </tr>
               ))
             )}
