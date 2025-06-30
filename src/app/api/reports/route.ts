@@ -46,16 +46,7 @@ export async function GET(request: NextRequest) {
 
     query += ` ORDER BY t.time DESC, d.id`;
 
-    console.log('Reports Query:', query);
-    console.log('Reports Params:', params);
-
     const result = await pool.query(query, params);
-
-    console.log('Reports Result:', {
-      rowCount: result.rows.length,
-      firstRow: result.rows[0],
-      lastRow: result.rows[result.rows.length - 1]
-    });
 
     // Transform the data to match the expected format
     const transformedData = result.rows.map(row => {
@@ -169,12 +160,6 @@ export async function GET(request: NextRequest) {
       return finalRecord;
     });
 
-    console.log('Final grouped data:', {
-      originalCount: transformedData.length,
-      groupedCount: finalData.length,
-      sampleRecord: finalData[0]
-    });
-
     // Get all employees for the selected date to include those without records
     const allEmployeesQuery = `
       SELECT 
@@ -211,17 +196,10 @@ export async function GET(request: NextRequest) {
     
     // Combine both sets of data
     const completeData = [...finalData, ...employeesWithoutRecords];
-    
-    console.log('Complete data:', {
-      withRecords: finalData.length,
-      withoutRecords: employeesWithoutRecords.length,
-      total: completeData.length
-    });
 
     return NextResponse.json(completeData);
 
   } catch (error) {
-    console.error('Error fetching reports:', error);
     return NextResponse.json(
       { 
         success: false, 

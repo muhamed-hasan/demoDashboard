@@ -12,7 +12,7 @@ import {
   BarElement,
   Title,
 } from 'chart.js';
-import { Doughnut, Bar } from 'react-chartjs-2';
+import { Doughnut } from 'react-chartjs-2';
 import { FilterProvider } from '@/contexts/FilterContext';
 import AttendanceTable, { AttendanceData } from '@/components/AttendanceTable';
 
@@ -20,11 +20,7 @@ import AttendanceTable, { AttendanceData } from '@/components/AttendanceTable';
 ChartJS.register(
   ArcElement,
   Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title
+  Legend
 );
 
 // Types for stats
@@ -287,78 +283,6 @@ export default function Home() {
     shift: item.shift,
     login: item.time,
   }));
-
-  // Chart data for department distribution
-  const departmentChartData = {
-    labels: stats?.deptDistribution ? Object.keys(stats.deptDistribution) : [],
-    datasets: [
-      {
-        data: stats?.deptDistribution ? Object.values(stats.deptDistribution) : [],
-        backgroundColor: [
-          '#3B82F6', // Blue
-          '#10B981', // Green
-          '#F59E0B', // Yellow
-          '#EF4444', // Red
-          '#8B5CF6', // Purple
-          '#06B6D4', // Cyan
-        ],
-        borderWidth: 2,
-        borderColor: '#ffffff',
-      },
-    ],
-  };
-
-  // Chart data for shift distribution
-  const shiftChartData = {
-    labels: stats?.shiftDistribution ? Object.keys(stats.shiftDistribution) : [],
-    datasets: [
-      {
-        data: stats?.shiftDistribution ? Object.values(stats.shiftDistribution) : [],
-        backgroundColor: [
-          '#10B981', // Green for Day
-          '#F59E0B', // Yellow for Night
-          '#6B7280', // Gray for Unknown
-        ],
-        borderWidth: 2,
-        borderColor: '#ffffff',
-      },
-    ],
-  };
-
-  // Chart data for attendance trend (bar chart)
-  const attendanceTrendData = {
-    labels: ['الحضور', 'الغياب'],
-    datasets: [
-      {
-        label: 'عدد الموظفين',
-        data: stats ? [stats.presentCount, stats.absentCount] : [0, 0],
-        backgroundColor: [
-          '#10B981', // Green for present
-          '#EF4444', // Red for absent
-        ],
-        borderWidth: 1,
-        borderColor: '#ffffff',
-      },
-    ],
-  };
-
-  const attendanceTrendOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: 'معدل الحضور',
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
-  };
 
   if (loading) {
     return (
