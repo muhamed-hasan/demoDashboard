@@ -83,7 +83,7 @@ export async function GET(request: Request) {
       whereClause = 'WHERE ' + whereConditions.join(' AND ');
     }
 
-    // Get total count for pagination
+    // Get total count for pagination (on filtered data)
     const countQuery = `
       SELECT COUNT(DISTINCT t.id) ${baseQuery} ${whereClause}
     `;
@@ -135,7 +135,7 @@ export async function GET(request: Request) {
       };
     });
     
-    // Calculate pagination info
+    // Calculate pagination info based on filtered data
     const totalPages = Math.ceil(totalCount / limit);
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;

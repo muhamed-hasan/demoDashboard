@@ -21,7 +21,6 @@ import {
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { FilterProvider, FilterContextType } from '@/contexts/FilterContext';
 import AttendanceTable, { AttendanceData } from '@/components/AttendanceTable';
-import { useAttendanceData } from '@/hooks/useAttendanceData';
 
 // Register Chart.js components
 ChartJS.register(
@@ -68,19 +67,6 @@ export default function Home() {
     hasNextPage: false,
     hasPrevPage: false,
     limit: 10
-  });
-
-  // Fetch detailed attendance data
-  const {
-    data: attendanceData,
-    loading: attendanceLoading,
-    error: attendanceError
-  } = useAttendanceData({
-    startDate,
-    endDate,
-    departments: selectedDepartments,
-    shift: selectedShift,
-    search: searchQuery,
   });
 
   const columnHelper = createColumnHelper<TableData>();
@@ -276,6 +262,19 @@ export default function Home() {
     setSearchQuery(searchText);
   };
 
+  // Convert TableData to AttendanceData for the table component
+  const attendanceData: AttendanceData[] = data.map(item => ({
+    date: item.time,
+    id: item.id,
+    name: item.fullName,
+    department: item.department,
+    shift: item.shift,
+    login: item.time,
+    logout: null,
+    hours: 0,
+    status: 'Present' as const
+  }));
+
   if (loading && data.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -418,255 +417,215 @@ export default function Home() {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Attendance Rate</p>
-                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats?.attendanceRate.toFixed(1) || 0}%</p>
+                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                        {stats?.attendanceRate ? `${stats.attendanceRate.toFixed(1)}%` : '0%'}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Charts Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Department Distribution</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Department Distribution</h3>
                   <div className="h-64">
-                    {stats && Object.keys(stats.deptDistribution).length > 0 ? (
-                      <Doughnut data={doughnutData} options={chartOptions} />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                        No data available
-                      </div>
-                    )}
+                    <Doughnut data={doughnutData} options={chartOptions} />
                   </div>
                 </div>
 
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Shift Distribution</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Shift Distribution</h3>
                   <div className="h-64">
-                    {stats && Object.keys(stats.shiftDistribution).length > 0 ? (
-                      <Bar data={barData} options={chartOptions} />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                        No data available
-                      </div>
-                    )}
+                    <Bar data={barData} options={chartOptions} />
                   </div>
                 </div>
               </div>
 
-              {/* Filters Toolbar */}
+              {/* Filters Section */}
               <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
-                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Filters</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                  {/* Date Range Filter */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Date Range */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Date Range
+                    </label>
                     <select
                       value={dateRange}
-                      onChange={(e) => handleDateRangeChange(e.target.value as 'today' | 'week' | 'month' | 'year' | 'custom')}
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      onChange={(e) => handleDateRangeChange(e.target.value as any)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     >
                       <option value="today">Today</option>
                       <option value="week">Last 7 Days</option>
                       <option value="month">Last 30 Days</option>
                       <option value="year">Last Year</option>
-                      <option value="custom">Custom</option>
+                      <option value="custom">Custom Range</option>
                     </select>
                   </div>
 
-                  {/* Custom Date Inputs */}
-                  {dateRange === 'custom' && (
-                    <>
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">From Date</label>
-                        <input
-                          type="date"
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.target.value)}
-                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">To Date</label>
-                        <input
-                          type="date"
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        />
-                      </div>
-                    </>
-                  )}
+                  {/* Start Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
 
-                  {/* Department Dropdown */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
+                  {/* End Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Department Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Department
+                    </label>
                     <select
-                      value={selectedDepartments.length > 0 ? selectedDepartments[0] : ''}
+                      multiple
+                      value={selectedDepartments}
                       onChange={(e) => {
-                        const value = e.target.value;
-                        setSelectedDepartments(value ? [value] : []);
+                        const selected = Array.from(e.target.selectedOptions, option => option.value);
+                        setSelectedDepartments(selected);
                       }}
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     >
                       <option value="">All Departments</option>
-                      {availableDepartments
-                        .filter(dept => dept !== "All Departments") // Avoid duplicate "All Departments" option
-                        .sort((a, b) => a.localeCompare(b)) // Sort departments alphabetically
-                        .map(dept => (
-                          <option key={dept} value={dept}>{dept}</option>
-                        ))
-                      }
-                    </select>
-                  </div>
-
-                  {/* Shift Select */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Shift</label>
-                    <select
-                      value={selectedShift}
-                      onChange={(e) => setSelectedShift(e.target.value)}
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    >
-                      <option value="all">All Shifts</option>
-                      {availableShifts.map(shift => (
-                        <option key={shift} value={shift}>{shift}</option>
+                      {availableDepartments.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Search Input */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                  {/* Shift Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Shift
+                    </label>
+                    <select
+                      value={selectedShift}
+                      onChange={(e) => setSelectedShift(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="all">All Shifts</option>
+                      {availableShifts.map((shift) => (
+                        <option key={shift} value={shift}>
+                          {shift}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Search */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Search
+                    </label>
                     <div className="flex">
                       <input
                         type="text"
-                        placeholder="Search by name..."
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleSearch();
-                          }
-                        }}
-                        className="w-full rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder="Search by name, department..."
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
                       <button
                         onClick={handleSearch}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-700 dark:hover:bg-indigo-800"
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                        </svg>
+                        Search
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              {loading && (
-                <div className="flex justify-center my-4">
-                  <p className="text-gray-500 dark:text-gray-400">Loading data...</p>
-                </div>
-              )}
-              
-              {/* Table */}
-              <div className="flex items-center justify-between mb-2 mt-4">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <label className="mr-2 text-sm font-medium">Rows per page:</label>
-                    <select
-                      value={rowsPerPage}
-                      onChange={e => {
-                        setRowsPerPage(Number(e.target.value));
-                        setPage(1);
-                      }}
-                      className="rounded-md border-gray-300 px-2 py-1 text-sm shadow focus:ring-2 focus:ring-blue-400 transition"
-                    >
-                      <option value={10}>10</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Showing {((page - 1) * rowsPerPage) + 1} to {Math.min(page * rowsPerPage, paginationInfo.totalCount)} of {paginationInfo.totalCount} results
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={!paginationInfo.hasPrevPage}
-                    className="w-8 h-8 flex items-center justify-center rounded-full border bg-gray-100 dark:bg-gray-700 text-sm disabled:opacity-50 transition"
-                  >
-                    &#8592;
-                  </button>
-                  {/* أرقام الصفحات */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                    <button
-                      key={n}
-                      onClick={() => setPage(n)}
-                      className={`w-8 h-8 flex items-center justify-center rounded-full border transition
-                        ${page === n ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'}`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={!paginationInfo.hasNextPage}
-                    className="w-8 h-8 flex items-center justify-center rounded-full border bg-gray-100 dark:bg-gray-700 text-sm disabled:opacity-50 transition"
-                  >
-                    &#8594;
-                  </button>
-                </div>
-              </div>
-              <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
-                <table className="min-w-full rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-                  <thead className="bg-gradient-to-r from-blue-100 to-blue-50 dark:from-gray-800 dark:to-gray-900">
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <tr key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                          <th
-                            key={header.id}
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                          >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
-                          </th>
+
+              {/* Pagination Controls */}
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      Showing {((page - 1) * rowsPerPage) + 1} to {Math.min(page * rowsPerPage, paginationInfo.totalCount)} of {paginationInfo.totalCount} results
+                    </span>
+                    
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-700 dark:text-gray-300">
+                        Rows per page:
+                      </label>
+                      <select
+                        value={rowsPerPage}
+                        onChange={(e) => {
+                          setRowsPerPage(Number(e.target.value));
+                          setPage(1);
+                        }}
+                        className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      >
+                        {[10, 20, 30, 40, 50].map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
                         ))}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
-                    {table.getRowModel().rows.length === 0 ? (
-                      <tr>
-                        <td 
-                          colSpan={columns.length} 
-                          className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
-                        >
-                          No records found for the selected filters
-                        </td>
-                      </tr>
-                    ) : (
-                      table.getRowModel().rows.map((row, idx) => (
-                        <tr key={row.id} className="hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors duration-150">
-                          {row.getVisibleCells().map((cell) => (
-                            <td
-                              key={cell.id}
-                              className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                          ))}
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setPage(1)}
+                      disabled={page === 1}
+                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                      First
+                    </button>
+                    <button
+                      onClick={() => setPage(page - 1)}
+                      disabled={!paginationInfo.hasPrevPage}
+                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                      Previous
+                    </button>
+                    <span className="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Page {page} of {paginationInfo.totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPage(page + 1)}
+                      disabled={!paginationInfo.hasNextPage}
+                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={() => setPage(paginationInfo.totalPages)}
+                      disabled={page === paginationInfo.totalPages}
+                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                      Last
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              {/* Attendance Table */}
+              <AttendanceTable 
+                data={attendanceData} 
+                loading={loading} 
+              />
             </div>
           </div>
         </FilterProvider>
