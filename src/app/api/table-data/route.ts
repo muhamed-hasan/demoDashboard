@@ -176,7 +176,7 @@ export async function GET(request: Request) {
         shift: row.shift || '',
         department: row.department || row.group || '',
         // Additional fields from table3
-        date: formatDate(row.date),
+        date: row.date,
         time2: row.time2,
         rname: row.rname,
         card_number: row.card_number,

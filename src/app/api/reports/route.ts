@@ -84,7 +84,7 @@ export async function GET(request: Request) {
       const hours = calculateHours(row.first_login, row.last_logout);
       
       // Use the date directly from database (it's already a date type)
-      const formattedDate = formatDate(row.date);
+      const formattedDate = row.date;
       
       return {
         id: row.id,
