@@ -308,8 +308,57 @@ export default function Home() {
     ],
   };
 
+  // Chart data for shift distribution
+  const shiftChartData = {
+    labels: stats?.shiftDistribution ? Object.keys(stats.shiftDistribution) : [],
+    datasets: [
+      {
+        data: stats?.shiftDistribution ? Object.values(stats.shiftDistribution) : [],
+        backgroundColor: [
+          '#10B981', // Green for Day
+          '#F59E0B', // Yellow for Night
+          '#6B7280', // Gray for Unknown
+        ],
+        borderWidth: 2,
+        borderColor: '#ffffff',
+      },
+    ],
+  };
 
+  // Chart data for attendance trend (bar chart)
+  const attendanceTrendData = {
+    labels: ['الحضور', 'الغياب'],
+    datasets: [
+      {
+        label: 'عدد الموظفين',
+        data: stats ? [stats.presentCount, stats.absentCount] : [0, 0],
+        backgroundColor: [
+          '#10B981', // Green for present
+          '#EF4444', // Red for absent
+        ],
+        borderWidth: 1,
+        borderColor: '#ffffff',
+      },
+    ],
+  };
 
+  const attendanceTrendOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: 'معدل الحضور',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
 
   if (loading) {
     return (
@@ -623,55 +672,7 @@ export default function Home() {
                   </div>
             )}
 
-            {/* Charts */}
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-              {/* Department Distribution */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">توزيع الأقسام</h3>
-                <div className="h-64">
-                  <Doughnut
-                    data={departmentChartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: 'bottom' as const,
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Shift Distribution */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">توزيع الشيفتات</h3>
-                <div className="h-64">
-                  <Doughnut 
-                    data={shiftChartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: 'bottom' as const,
-                        },
-                      },
-                    }}
-                  />
-              </div>
-            </div>
-          </div>
-
-            {/* Attendance Trend */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">معدل الحضور</h3>
-              <div className="h-64">
-                <Bar data={attendanceTrendData} options={attendanceTrendOptions} />
-              </div>
-            </div>
-
+          
             {/* Attendance Table */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
               <div className="flex justify-between items-center mb-6">
