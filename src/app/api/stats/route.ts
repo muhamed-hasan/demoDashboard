@@ -21,15 +21,15 @@ export async function GET(request: Request) {
 
     // Date range filter
     if (startDate && endDate) {
-      whereConditions.push(`DATE(t.time) >= $${paramIndex} AND DATE(t.time) <= $${paramIndex + 1}`);
+      whereConditions.push(`t.date >= $${paramIndex} AND t.date <= $${paramIndex + 1}`);
       values.push(startDate, endDate);
       paramIndex += 2;
     } else if (startDate) {
-      whereConditions.push(`DATE(t.time) >= $${paramIndex}`);
+      whereConditions.push(`t.date >= $${paramIndex}`);
       values.push(startDate);
       paramIndex += 1;
     } else if (endDate) {
-      whereConditions.push(`DATE(t.time) <= $${paramIndex}`);
+      whereConditions.push(`t.date <= $${paramIndex}`);
       values.push(endDate);
       paramIndex += 1;
     }

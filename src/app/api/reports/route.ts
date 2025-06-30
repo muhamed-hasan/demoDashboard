@@ -46,15 +46,15 @@ export async function GET(request: Request) {
         d.last_name,
         d.department,
         d.shift,
-        DATE(t.time) as date,
+        t.date,
         MIN(t.time) as first_login,
         MAX(t.time) as last_logout,
         COUNT(*) as total_records
       FROM table3 t
       LEFT JOIN details d ON t.id = d.id::text
-      WHERE DATE(t.time) >= $1 AND DATE(t.time) <= $2
-      GROUP BY t.id, d.first_name, d.last_name, d.department, d.shift, DATE(t.time)
-      ORDER BY DATE(t.time) DESC, t.id
+      WHERE t.date >= $1 AND t.date <= $2
+      GROUP BY t.id, d.first_name, d.last_name, d.department, d.shift, t.date
+      ORDER BY t.date DESC, t.id
     `;
     
     const result = await pool.query(query, [startDate, endDate]);
