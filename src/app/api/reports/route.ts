@@ -63,8 +63,8 @@ export async function GET(request: Request) {
     const reportsData = result.rows.map((row: any) => {
       const hours = calculateHours(row.first_login, row.last_logout);
       
-      // Format date to show only the date part (YYYY-MM-DD)
-      const formattedDate = row.date ? new Date(row.date).toISOString().split('T')[0] : '';
+      // Use the date directly from database without timezone conversion
+      const formattedDate = row.date ? row.date.toString() : '';
       
       return {
         id: row.id,
