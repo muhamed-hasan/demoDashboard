@@ -3,13 +3,14 @@ import pool from '@/lib/db';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log('Delete request received with params:', params);
+    const resolvedParams = await params;
+    console.log('Delete request received with params:', resolvedParams);
     
     // Check if params.id exists
-    if (!params || !params.id) {
+    if (!resolvedParams || !resolvedParams.id) {
       console.log('No params or params.id found');
       return NextResponse.json(
         { 
@@ -20,8 +21,8 @@ export async function DELETE(
       );
     }
 
-    console.log('Parsing ID:', params.id);
-    const id = parseInt(params.id);
+    console.log('Parsing ID:', resolvedParams.id);
+    const id = parseInt(resolvedParams.id);
     console.log('Parsed ID:', id);
     
     if (isNaN(id)) {
