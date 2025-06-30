@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const department = searchParams.get('department');
 
+    
     let query = `
       SELECT 
         d.id,

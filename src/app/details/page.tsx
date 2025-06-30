@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { FaDatabase, FaUsers, FaSearch, FaFilter, FaTrash, FaPlus, FaTimes } from 'react-icons/fa';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EmployeeDetail {
   id: number;
@@ -27,7 +26,6 @@ interface FormErrors {
 }
 
 export default function DetailsPage() {
-  const { t } = useLanguage();
   const [employees, setEmployees] = useState<EmployeeDetail[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<EmployeeDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -153,25 +151,25 @@ export default function DetailsPage() {
 
     // First name validation
     if (!formData.first_name.trim()) {
-      errors.first_name = t('firstNameRequired');
+      errors.first_name = 'الاسم الأول مطلوب';
     } else if (formData.first_name.trim().length < 2) {
-      errors.first_name = t('firstNameRequired');
+      errors.first_name = 'الاسم الأول يجب أن يكون على الأقل حرفين';
     } else if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(formData.first_name.trim())) {
-      errors.first_name = t('firstNameRequired');
+      errors.first_name = 'الاسم الأول يجب أن يحتوي على أحرف فقط';
     }
 
     // Last name validation
     if (!formData.last_name.trim()) {
-      errors.last_name = t('lastNameRequired');
+      errors.last_name = 'الاسم الأخير مطلوب';
     } else if (formData.last_name.trim().length < 2) {
-      errors.last_name = t('lastNameRequired');
+      errors.last_name = 'الاسم الأخير يجب أن يكون على الأقل حرفين';
     } else if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(formData.last_name.trim())) {
-      errors.last_name = t('lastNameRequired');
+      errors.last_name = 'الاسم الأخير يجب أن يحتوي على أحرف فقط';
     }
 
     // Department validation
     if (!formData.department) {
-      errors.department = t('departmentRequired');
+      errors.department = 'القسم مطلوب';
     }
 
     // Shift validation (optional)
