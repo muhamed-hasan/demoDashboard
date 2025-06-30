@@ -279,14 +279,28 @@ export default function Home() {
   };
 
   // Convert TableData to AttendanceData for the table component
-  const attendanceData: AttendanceData[] = data.map(item => ({
-    date: item.time,
-    id: item.id,
-    name: item.fullName,
-    department: item.department,
-    shift: item.shift,
-    login: item.time
-  }));
+  const attendanceData: AttendanceData[] = data.map(item => {
+    const attendanceItem = {
+      date: item.date || item.time, // Use date field if available, fallback to time
+      id: item.id,
+      name: item.fullName,
+      department: item.department,
+      shift: item.shift,
+      login: item.time
+    };
+    
+    // Debug log for first few items
+    if (data.indexOf(item) < 3) {
+      console.log('Attendance item:', {
+        originalItem: item,
+        convertedItem: attendanceItem,
+        dateField: item.date,
+        timeField: item.time
+      });
+    }
+    
+    return attendanceItem;
+  });
 
   if (loading && data.length === 0) {
     return (

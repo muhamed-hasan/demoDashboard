@@ -154,19 +154,53 @@ export async function GET(request: Request) {
     
     // Format the data
     const enrichedData = result.rows.map((row: any) => {
-      return {
+      // Format date properly
+      let formattedDate = row.date;
+      if (row.date) {
+        try {
+          const dateObj = new Date(row.date);
+          if (!isNaN(dateObj.getTime())) {
+            formattedDate = dateObj.toISOString();
+          }
+        } catch (error) {
+          console.error('Error formatting date:', row.date, error);
+        }
+      }
+      
+      const enrichedItem = {
         id: row.id,
         time: formatTime(row.time),
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         shift: row.shift || '',
         department: row.department || row.group || '',
         // Additional fields from table3
-        date: row.date,
+        date: formattedDate,
         time2: row.time2,
         rname: row.rname,
         card_number: row.card_number,
         dev: row.dev
       };
+      
+      // Debug log for first few items
+      if (result.rows.indexOf(row) < 3) {
+        console.log('API Row processing:', {
+          originalRow: {
+            id: row.id,
+            time: row.time,
+            date: row.date,
+            first_name: row.first_name,
+            last_name: row.last_name
+          },
+          enrichedItem: {
+            id: enrichedItem.id,
+            time: enrichedItem.time,
+            date: enrichedItem.date,
+            fullName: enrichedItem.fullName
+          }
+        });
+      }
+      
+      return enrichedItem;
     });
     
     // Calculate pagination info based on filtered data

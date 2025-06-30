@@ -46,15 +46,40 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
         </button>
       ),
       cell: ({ getValue }) => {
-        const date = new Date(getValue());
-        return (
-          <div className="flex flex-col">
-            <span className="font-medium">{date.toLocaleDateString()}</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {date.toLocaleDateString('en-US', { weekday: 'short' })}
-            </span>
-          </div>
-        );
+        const dateValue = getValue();
+        let date: Date;
+        
+        try {
+          // Handle different date formats
+          if (typeof dateValue === 'string') {
+            date = new Date(dateValue);
+          } else {
+            date = dateValue;
+          }
+          
+          // Check if date is valid
+          if (isNaN(date.getTime())) {
+            return <span className="text-red-500">Invalid Date</span>;
+          }
+          
+          return (
+            <div className="flex flex-col">
+              <span className="font-medium">
+                {date.toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {date.toLocaleDateString('en-US', { weekday: 'short' })}
+              </span>
+            </div>
+          );
+        } catch (error) {
+          console.error('Error parsing date:', dateValue, error);
+          return <span className="text-red-500">Date Error</span>;
+        }
       },
     }),
     columnHelper.accessor('id', {
