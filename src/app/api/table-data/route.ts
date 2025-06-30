@@ -33,10 +33,21 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
 
+    console.log('API Request Parameters:', {
+      startDate,
+      endDate,
+      departments,
+      shift,
+      searchText,
+      page,
+      limit,
+      offset
+    });
+
     // Build the JOIN query with filters
     let baseQuery = `
       FROM table3 t
-      LEFT JOIN details d ON t.id = d.id::text
+      LEFT JOIN details d ON CAST(t.id AS TEXT) = d.id
     `;
     let whereConditions: string[] = [];
     let values: any[] = [];
@@ -83,12 +94,27 @@ export async function GET(request: Request) {
       whereClause = 'WHERE ' + whereConditions.join(' AND ');
     }
 
+    console.log('Query Details:', {
+      baseQuery,
+      whereClause,
+      values,
+      paramIndex
+    });
+
     // Get total count for pagination (on filtered data)
     const countQuery = `
-      SELECT COUNT(DISTINCT t.id) ${baseQuery} ${whereClause}
+      SELECT COUNT(*) ${baseQuery} ${whereClause}
     `;
+    console.log('Count Query:', countQuery);
+    console.log('Count Values:', values);
+    
     const countResult = await pool.query(countQuery, values);
     const totalCount = parseInt(countResult.rows[0].count);
+    
+    console.log('Count Result:', {
+      totalCount,
+      countResult: countResult.rows[0]
+    });
 
     // Get paginated data with JOIN
     const dataQuery = `
@@ -101,7 +127,7 @@ export async function GET(request: Request) {
         t.lname,
         t.name,
         t.rname,
-        t.group,
+        t."group",
         t.card_number,
         t.pic,
         t.dev,
@@ -114,9 +140,18 @@ export async function GET(request: Request) {
       ORDER BY t.time DESC 
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
-    values.push(limit, offset);
     
-    const result = await pool.query(dataQuery, values);
+    const dataValues = [...values, limit, offset];
+    console.log('Data Query:', dataQuery);
+    console.log('Data Values:', dataValues);
+    
+    const result = await pool.query(dataQuery, dataValues);
+    
+    console.log('Data Result:', {
+      rowCount: result.rows.length,
+      firstRow: result.rows[0],
+      lastRow: result.rows[result.rows.length - 1]
+    });
     
     // Format the data
     const enrichedData = result.rows.map((row: any) => {
@@ -140,16 +175,21 @@ export async function GET(request: Request) {
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
     
+    const paginationInfo = {
+      currentPage: page,
+      totalPages,
+      totalCount,
+      hasNextPage,
+      hasPrevPage,
+      limit
+    };
+    
+    console.log('Pagination Info:', paginationInfo);
+    console.log('Response Data Length:', enrichedData.length);
+    
     return NextResponse.json({
       data: enrichedData,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalCount,
-        hasNextPage,
-        hasPrevPage,
-        limit
-      }
+      pagination: paginationInfo
     });
   } catch (error) {
     console.error('Error fetching data:', error);

@@ -183,16 +183,21 @@ export default function Home() {
           params.append('search', searchQuery);
         }
         
+        console.log('Fetching data with params:', params.toString());
+        
         const response = await fetch(`/api/table-data?${params}`);
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
         const result = await response.json();
         
+        console.log('API Response:', result);
+        
         // Handle new pagination response format
         if (result.data && result.pagination) {
           setData(result.data);
           setPaginationInfo(result.pagination);
+          console.log('Set pagination info:', result.pagination);
         } else {
           // Fallback for old format
           setData(result);
@@ -206,6 +211,7 @@ export default function Home() {
           });
         }
       } catch (err) {
+        console.error('Error in fetchData:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
         setData([]);
       } finally {
@@ -571,6 +577,7 @@ export default function Home() {
                       <select
                         value={rowsPerPage}
                         onChange={(e) => {
+                          console.log('Changing rows per page to:', e.target.value);
                           setRowsPerPage(Number(e.target.value));
                           setPage(1);
                         }}
@@ -587,14 +594,20 @@ export default function Home() {
 
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => setPage(1)}
+                      onClick={() => {
+                        console.log('Going to first page');
+                        setPage(1);
+                      }}
                       disabled={page === 1}
                       className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
                     >
                       First
                     </button>
                     <button
-                      onClick={() => setPage(page - 1)}
+                      onClick={() => {
+                        console.log('Going to previous page, current page:', page);
+                        setPage(page - 1);
+                      }}
                       disabled={!paginationInfo.hasPrevPage}
                       className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
                     >
@@ -604,20 +617,31 @@ export default function Home() {
                       Page {page} of {paginationInfo.totalPages}
                     </span>
                     <button
-                      onClick={() => setPage(page + 1)}
+                      onClick={() => {
+                        console.log('Going to next page, current page:', page, 'hasNextPage:', paginationInfo.hasNextPage);
+                        setPage(page + 1);
+                      }}
                       disabled={!paginationInfo.hasNextPage}
                       className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
                     >
                       Next
                     </button>
                     <button
-                      onClick={() => setPage(paginationInfo.totalPages)}
+                      onClick={() => {
+                        console.log('Going to last page, total pages:', paginationInfo.totalPages);
+                        setPage(paginationInfo.totalPages);
+                      }}
                       disabled={page === paginationInfo.totalPages}
                       className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
                     >
                       Last
                     </button>
                   </div>
+                </div>
+                
+                {/* Debug info */}
+                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  Debug: Page={page}, TotalPages={paginationInfo.totalPages}, TotalCount={paginationInfo.totalCount}, HasNext={paginationInfo.hasNextPage}, HasPrev={paginationInfo.hasPrevPage}
                 </div>
               </div>
 
