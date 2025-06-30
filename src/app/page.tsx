@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { TableData } from '@/types/table';
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
@@ -88,15 +87,6 @@ export default function Home() {
     columnHelper.accessor('shift', { header: 'Shift' }),
     columnHelper.accessor('department', { header: 'Department' }),
   ];
-
-  const table = useReactTable({
-    data: data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  // حساب البيانات المعروضة في الصفحة الحالية
-  const totalPages = paginationInfo.totalPages;
 
   const handleDateRangeChange = (range: 'today' | 'week' | 'month' | 'year' | 'custom') => {
     const today = new Date();
@@ -199,614 +189,605 @@ export default function Home() {
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
+        
         const result = await response.json();
         
-        console.log('API Response:', result);
-        
-        // Handle new pagination response format
-        if (result.data && result.pagination) {
-          setData(result.data);
-          setPaginationInfo(result.pagination);
-          console.log('Set pagination info:', result.pagination);
-        } else {
-          // Fallback for old format
-        setData(result);
-          setPaginationInfo({
-            currentPage: page,
-            totalPages: Math.ceil(result.length / rowsPerPage),
-            totalCount: result.length,
-            hasNextPage: page < Math.ceil(result.length / rowsPerPage),
-            hasPrevPage: page > 1,
-            limit: rowsPerPage
-          });
+        if (result.error) {
+          throw new Error(result.error);
         }
+        
+        // Transform the data to match the expected format
+        const transformedData: TableData[] = result.data.map((item: Record<string, unknown>) => ({
+          id: item.id as string,
+          time: item.time as string,
+          fullName: item.fullName as string,
+          shift: item.shift as string,
+          department: item.department as string,
+        }));
+        
+        setData(transformedData);
+        setPaginationInfo(result.pagination);
+        
+        // Fetch employee details for additional data
+        try {
+          const detailsResponse = await fetch('/api/details');
+          if (detailsResponse.ok) {
+            const detailsData = await detailsResponse.json();
+            if (detailsData.success && detailsData.data) {
+              // Create a map of employee details by ID
+              const employeeDetailsMap = new Map();
+              detailsData.data.forEach((employee: Record<string, unknown>) => {
+                employeeDetailsMap.set(employee.id?.toString(), employee);
+              });
+              
+              // Enrich the attendance data with employee details
+              const enrichedData = transformedData.map(item => {
+                const employeeDetails = employeeDetailsMap.get(item.id);
+                return {
+                  ...item,
+                  firstName: employeeDetails?.first_name || '',
+                  lastName: employeeDetails?.last_name || '',
+                  department: employeeDetails?.department || item.department,
+                  shift: employeeDetails?.shift || item.shift,
+                };
+              });
+              
+              setData(enrichedData);
+            }
+          }
+        } catch (detailsError) {
+          console.error('Error fetching employee details:', detailsError);
+          // Continue with the original data if details fetch fails
+        }
+        
       } catch (err) {
-        console.error('Error in fetchData:', err);
+        console.error('Error fetching data:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
-        setData([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-    fetchStats();
-  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, refreshTrigger, fetchStats, page, rowsPerPage]);
+  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery, page, rowsPerPage, refreshTrigger]);
 
-  // Reset page to 1 when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [startDate, endDate, selectedDepartments, selectedShift, searchQuery]);
-
-  // Fetch initial data for departments and shifts on component mount
+  // Fetch initial data and stats
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Fetch all departments from details table
-        const detailsResponse = await fetch('/api/details');
-        if (detailsResponse.ok) {
-          const detailsData = await detailsResponse.json();
-          if (detailsData.success && detailsData.data) {
-          const departments = new Set<string>();
-            const shifts = new Set<string>();
-          
-            // Extract all unique departments and shifts from details table
-            detailsData.data.forEach((employee: any) => {
-              if (employee.department) {
-                departments.add(employee.department);
-              }
-              if (employee.shift) {
-                shifts.add(employee.shift);
-            }
-          });
-          
-            // Convert Sets to Arrays and set available departments and shifts
-            setAvailableDepartments(Array.from(departments).sort());
-            setAvailableShifts(Array.from(shifts).sort());
-          }
-        }
+        setLoading(true);
+        await Promise.all([
+          fetchStats(),
+          // Initial data fetch will be handled by the other useEffect
+        ]);
       } catch (err) {
         console.error('Error fetching initial data:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchInitialData();
-  }, []);
+  }, [fetchStats]);
 
-  // Handle search button click
   const handleSearch = () => {
     setSearchQuery(searchText);
+    setPage(1); // Reset to first page when searching
   };
 
-  // Convert TableData to AttendanceData for the table component
-  const attendanceData: AttendanceData[] = data.map(item => {
-    const attendanceItem = {
-      date: item.date || item.time, // Use date field if available, fallback to time
-      id: item.id,
-      name: item.fullName,
-      department: item.department,
-      shift: item.shift,
-      login: item.time
-    };
-    
-    // Debug log for first few items
-    if (data.indexOf(item) < 3) {
-      console.log('Attendance item:', {
-        originalItem: item,
-        convertedItem: attendanceItem,
-        dateField: item.date,
-        timeField: item.time
-      });
-    }
-    
-    return attendanceItem;
-  });
+  const handleClearFilters = () => {
+    setSelectedDepartments([]);
+    setSelectedShift('all');
+    setSearchText('');
+    setSearchQuery('');
+    setPage(1);
+  };
 
-  if (loading && data.length === 0) {
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (newRowsPerPage: number) => {
+    setRowsPerPage(newRowsPerPage);
+    setPage(1); // Reset to first page when changing rows per page
+  };
+
+  // Transform data for AttendanceTable component
+  const attendanceData: AttendanceData[] = data.map(item => ({
+    id: item.id,
+    date: item.time, // Using time as date for display
+    time: item.time,
+    fullName: item.fullName,
+    firstName: item.firstName || '',
+    lastName: item.lastName || '',
+    shift: item.shift,
+    department: item.department,
+  }));
+
+  // Chart data for department distribution
+  const departmentChartData = {
+    labels: stats?.deptDistribution ? Object.keys(stats.deptDistribution) : [],
+    datasets: [
+      {
+        data: stats?.deptDistribution ? Object.values(stats.deptDistribution) : [],
+        backgroundColor: [
+          '#3B82F6', // Blue
+          '#10B981', // Green
+          '#F59E0B', // Yellow
+          '#EF4444', // Red
+          '#8B5CF6', // Purple
+          '#06B6D4', // Cyan
+        ],
+        borderWidth: 2,
+        borderColor: '#ffffff',
+      },
+    ],
+  };
+
+  // Chart data for shift distribution
+  const shiftChartData = {
+    labels: stats?.shiftDistribution ? Object.keys(stats.shiftDistribution) : [],
+    datasets: [
+      {
+        data: stats?.shiftDistribution ? Object.values(stats.shiftDistribution) : [],
+        backgroundColor: [
+          '#10B981', // Green for Day
+          '#F59E0B', // Yellow for Night
+          '#6B7280', // Gray for Unknown
+        ],
+        borderWidth: 2,
+        borderColor: '#ffffff',
+      },
+    ],
+  };
+
+  // Chart data for attendance trend (bar chart)
+  const attendanceTrendData = {
+    labels: ['الحضور', 'الغياب'],
+    datasets: [
+      {
+        label: 'عدد الموظفين',
+        data: stats ? [stats.presentCount, stats.absentCount] : [0, 0],
+        backgroundColor: [
+          '#10B981', // Green for present
+          '#EF4444', // Red for absent
+        ],
+        borderWidth: 1,
+        borderColor: '#ffffff',
+      },
+    ],
+  };
+
+  const attendanceTrendOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: 'معدل الحضور',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <p className="text-xl font-semibold">Loading...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">جاري تحميل البيانات...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center p-6 max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          <p className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Error</p>
-          <p className="text-gray-700 dark:text-gray-300">{error}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-            Please check your database connection and try again.
-          </p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 dark:text-red-400 text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">خطأ في تحميل البيانات</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          >
+            إعادة المحاولة
+          </button>
         </div>
       </div>
     );
   }
 
-  // Chart data configurations
-  const doughnutData = {
-    labels: stats ? Object.keys(stats.deptDistribution) : [],
-    datasets: [
-      {
-        data: stats ? Object.values(stats.deptDistribution) : [],
-        backgroundColor: [
-          '#FF6384',
-          '#36A2EB',
-          '#FFCE56',
-          '#4BC0C0',
-          '#9966FF',
-          '#FF9F40',
-        ],
-        hoverBackgroundColor: [
-          '#FF6384',
-          '#36A2EB',
-          '#FFCE56',
-          '#4BC0C0',
-          '#9966FF',
-          '#FF9F40',
-        ],
-      },
-    ],
-  };
-
-  const barData = {
-    labels: stats ? Object.keys(stats.shiftDistribution) : [],
-    datasets: [
-      {
-        label: 'Employees by Shift',
-        data: stats ? Object.values(stats.shiftDistribution) : [],
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-  };
-
-  const filterContextValue: FilterContextType = {
-    dateRange,
-    startDate,
-    endDate,
-    selectedDepartments,
-    selectedShift,
-    searchText,
-    setDateRange,
-    setStartDate,
-    setEndDate,
-    setSelectedDepartments,
-    setSelectedShift,
-    setSearchText,
-  };
-
   return (
-    <div className="flex">
-      <main className="flex-1 p-4">
-    <FilterProvider value={filterContextValue}>
-      <div className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-screen-2xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">Attendance Dashboard</h1>
-          
-          {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
-                  <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Employees</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalEmployees || 0}</p>
-                </div>
-              </div>
+    <FilterProvider>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                لوحة تحكم الحضور والانصراف
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                عرض إحصائيات الحضور والانصراف للموظفين
+              </p>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-green-100 dark:bg-green-900">
-                  <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Present</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.presentCount || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-red-100 dark:bg-red-900">
-                  <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Absent</p>
-                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats?.absentCount || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
-                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Attendance Rate</p>
-                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        {stats?.attendanceRate ? `${stats.attendanceRate.toFixed(1)}%` : '0%'}
-                      </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Department Specific Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Heidelberg Department */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                Heidelberg Department
-              </h3>
-              <div className="text-center mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Attendance Rate</p>
-                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {stats?.heidelbergStats?.totalEmployees && stats.heidelbergStats.totalEmployees > 0 
-                    ? `${((stats.heidelbergStats.presentCount / stats.heidelbergStats.totalEmployees) * 100).toFixed(1)}%`
-                    : '0%'}
-                </p>
-              </div>
-              {/* Heidelberg Pie Chart */}
-              <div className="mt-4">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center mb-2">Attendance Distribution</h4>
-                <div className="h-48">
-                  <Doughnut 
-                    data={{
-                      labels: ['Present', 'Absent'],
-                      datasets: [{
-                        data: [
-                          stats?.heidelbergStats?.presentCount || 0,
-                          stats?.heidelbergStats?.absentCount || 0
-                        ],
-                        backgroundColor: ['#10B981', '#EF4444'],
-                        hoverBackgroundColor: ['#059669', '#DC2626'],
-                        borderWidth: 0
-                      }]
-                    }} 
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: 'bottom',
-                          labels: {
-                            color: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#6B7280',
-                            font: {
-                              size: 12
-                            }
-                          }
-                        },
-                        tooltip: {
-                          backgroundColor: document.documentElement.classList.contains('dark') ? '#374151' : '#FFFFFF',
-                          titleColor: document.documentElement.classList.contains('dark') ? '#F9FAFB' : '#111827',
-                          bodyColor: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#6B7280',
-                          borderColor: document.documentElement.classList.contains('dark') ? '#4B5563' : '#E5E7EB',
-                          borderWidth: 1,
-                          callbacks: {
-                            label: function(context) {
-                              const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-                              const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : '0';
-                              return `${context.label}: ${context.parsed} (${percentage}%)`;
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Naser Department */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                Naser Department
-              </h3>
-              <div className="text-center mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Attendance Rate</p>
-                <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                  {stats?.naserStats?.totalEmployees && stats.naserStats.totalEmployees > 0 
-                    ? `${((stats.naserStats.presentCount / stats.naserStats.totalEmployees) * 100).toFixed(1)}%`
-                    : '0%'}
-                </p>
-              </div>
-              {/* Naser Pie Chart */}
-              <div className="mt-4">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center mb-2">Attendance Distribution</h4>
-                <div className="h-48">
-                  <Doughnut 
-                    data={{
-                      labels: ['Present', 'Absent'],
-                      datasets: [{
-                        data: [
-                          stats?.naserStats?.presentCount || 0,
-                          stats?.naserStats?.absentCount || 0
-                        ],
-                        backgroundColor: ['#10B981', '#EF4444'],
-                        hoverBackgroundColor: ['#059669', '#DC2626'],
-                        borderWidth: 0
-                      }]
-                    }} 
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: 'bottom',
-                          labels: {
-                            color: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#6B7280',
-                            font: {
-                              size: 12
-                            }
-                          }
-                        },
-                        tooltip: {
-                          backgroundColor: document.documentElement.classList.contains('dark') ? '#374151' : '#FFFFFF',
-                          titleColor: document.documentElement.classList.contains('dark') ? '#F9FAFB' : '#111827',
-                          bodyColor: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#6B7280',
-                          borderColor: document.documentElement.classList.contains('dark') ? '#4B5563' : '#E5E7EB',
-                          borderWidth: 1,
-                          callbacks: {
-                            label: function(context) {
-                              const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-                              const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : '0';
-                              return `${context.label}: ${context.parsed} (${percentage}%)`;
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Charts Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Department Distribution</h3>
-              <div className="h-64">
-                  <Doughnut data={doughnutData} options={chartOptions} />
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Shift Distribution</h3>
-              <div className="h-64">
-                  <Bar data={barData} options={chartOptions} />
-              </div>
-            </div>
-          </div>
-
-              {/* Filters Section */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Date Range */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Date Range
-                    </label>
-                <select
-                  value={dateRange}
-                      onChange={(e) => handleDateRangeChange(e.target.value as any)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="today">Today</option>
-                  <option value="week">Last 7 Days</option>
-                  <option value="month">Last 30 Days</option>
-                  <option value="year">Last Year</option>
-                      <option value="custom">Custom Range</option>
-                </select>
-              </div>
-
-                  {/* Start Date */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                  </div>
-
-                  {/* End Date */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                  </div>
-
-                  {/* Department Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Department
-                    </label>
-                <select
-                  value={selectedDepartments.length > 0 ? selectedDepartments[0] : ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedDepartments(value ? [value] : []);
-                  }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="">All Departments</option>
-                      {availableDepartments.map((dept) => (
-                        <option key={dept} value={dept}>
-                          {dept}
-                        </option>
-                      ))}
-                </select>
-              </div>
-
-                  {/* Shift Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Shift
-                    </label>
-                <select
-                  value={selectedShift}
-                  onChange={(e) => setSelectedShift(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="all">All Shifts</option>
-                      {availableShifts.map((shift) => (
-                        <option key={shift} value={shift}>
-                          {shift}
-                        </option>
-                  ))}
-                </select>
-              </div>
-
-                  {/* Search */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Search
-                    </label>
-                <div className="flex">
-                  <input
-                    type="text"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                        placeholder="Search by name, department..."
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                  <button
-                    onClick={handleSearch}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            {/* Filters */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Date Range */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    نطاق التاريخ
+                  </label>
+                  <select
+                    value={dateRange}
+                    onChange={(e) => handleDateRangeChange(e.target.value as 'today' | 'week' | 'month' | 'year' | 'custom')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   >
-                        Search
+                    <option value="today">اليوم</option>
+                    <option value="week">آخر أسبوع</option>
+                    <option value="month">آخر شهر</option>
+                    <option value="year">آخر سنة</option>
+                    <option value="custom">مخصص</option>
+                  </select>
+                </div>
+
+                {/* Custom Date Range */}
+                {dateRange === 'custom' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        من تاريخ
+                      </label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        إلى تاريخ
+                      </label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Department Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    القسم
+                  </label>
+                  <select
+                    value={selectedDepartments[0] || ''}
+                    onChange={(e) => setSelectedDepartments(e.target.value ? [e.target.value] : [])}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">كل الأقسام</option>
+                    {availableDepartments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Shift Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    الشيفت
+                  </label>
+                  <select
+                    value={selectedShift}
+                    onChange={(e) => setSelectedShift(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="all">كل الشيفتات</option>
+                    {availableShifts.map(shift => (
+                      <option key={shift} value={shift}>{shift}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Search */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    البحث
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="البحث بالاسم..."
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                    <button
+                      onClick={handleSearch}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                      بحث
+                    </button>
+                  </div>
+                </div>
+
+                {/* Clear Filters */}
+                <div className="flex items-end">
+                  <button
+                    onClick={handleClearFilters}
+                    className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    مسح الفلاتر
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-          
-              {/* Pagination Controls */}
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      Showing {((page - 1) * rowsPerPage) + 1} to {Math.min(page * rowsPerPage, paginationInfo.totalCount)} of {paginationInfo.totalCount} results
-                    </span>
-                    
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm text-gray-700 dark:text-gray-300">
-                        Rows per page:
-                      </label>
-                      <select
-                        value={rowsPerPage}
-                        onChange={(e) => {
-                          console.log('Changing rows per page to:', e.target.value);
-                          setRowsPerPage(Number(e.target.value));
-                          setPage(1);
-                        }}
-                        className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      >
-                        {[10, 20, 30, 40, 50].map((size) => (
-                          <option key={size} value={size}>
-                            {size}
-                          </option>
-                        ))}
-                      </select>
+
+            {/* Stats Cards */}
+            {stats && (
+              <div className="grid md:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                      <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">إجمالي الموظفين</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalEmployees}</p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        console.log('Going to first page');
-                        setPage(1);
-                      }}
-                      disabled={page === 1}
-                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
-                    >
-                      First
-                    </button>
-                    <button
-                      onClick={() => {
-                        console.log('Going to previous page, current page:', page);
-                        setPage(page - 1);
-                      }}
-                      disabled={!paginationInfo.hasPrevPage}
-                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
-                    >
-                      Previous
-                    </button>
-                    <span className="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Page {page} of {paginationInfo.totalPages}
-                    </span>
-                    <button
-                      onClick={() => {
-                        console.log('Going to next page, current page:', page, 'hasNextPage:', paginationInfo.hasNextPage);
-                        setPage(page + 1);
-                      }}
-                      disabled={!paginationInfo.hasNextPage}
-                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
-                    >
-                      Next
-                    </button>
-                    <button
-                      onClick={() => {
-                        console.log('Going to last page, total pages:', paginationInfo.totalPages);
-                        setPage(paginationInfo.totalPages);
-                      }}
-                      disabled={page === paginationInfo.totalPages}
-                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
-                    >
-                      Last
-                    </button>
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                      <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">الحضور</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.presentCount}</p>
+                    </div>
                   </div>
                 </div>
-                
-                {/* Debug info */}
-                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  Debug: Page={page}, TotalPages={paginationInfo.totalPages}, TotalCount={paginationInfo.totalCount}, HasNext={paginationInfo.hasNextPage}, HasPrev={paginationInfo.hasPrevPage}
+
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-red-100 dark:bg-red-900 rounded-lg">
+                      <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">الغياب</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.absentCount}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                      <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">معدل الحضور</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.attendanceRate}%</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            
-              {/* Attendance Table */}
-            <AttendanceTable 
-              data={attendanceData} 
-                loading={loading} 
-            />
+            )}
+
+            {/* Department Stats */}
+            {stats?.heidelbergStats && stats?.naserStats && (
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                {/* Heidelberg Department */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">قسم Heidelberg</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">معدل الحضور</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {stats.heidelbergStats.totalEmployees > 0 
+                          ? ((stats.heidelbergStats.presentCount / stats.heidelbergStats.totalEmployees) * 100).toFixed(1)
+                          : '0'}%
+                      </p>
+                    </div>
+                    <div className="w-24 h-24">
+                      <Doughnut
+                        data={{
+                          labels: ['حاضر', 'غائب'],
+                          datasets: [{
+                            data: [stats.heidelbergStats.presentCount, stats.heidelbergStats.absentCount],
+                            backgroundColor: ['#10B981', '#EF4444'],
+                            borderWidth: 0,
+                          }]
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: false,
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Naser Department */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">قسم Naser</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">معدل الحضور</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {stats.naserStats.totalEmployees > 0 
+                          ? ((stats.naserStats.presentCount / stats.naserStats.totalEmployees) * 100).toFixed(1)
+                          : '0'}%
+                      </p>
+                    </div>
+                    <div className="w-24 h-24">
+                      <Doughnut
+                        data={{
+                          labels: ['حاضر', 'غائب'],
+                          datasets: [{
+                            data: [stats.naserStats.presentCount, stats.naserStats.absentCount],
+                            backgroundColor: ['#10B981', '#EF4444'],
+                            borderWidth: 0,
+                          }]
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: false,
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Charts */}
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              {/* Department Distribution */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">توزيع الأقسام</h3>
+                <div className="h-64">
+                  <Doughnut
+                    data={departmentChartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom' as const,
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Shift Distribution */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">توزيع الشيفتات</h3>
+                <div className="h-64">
+                  <Doughnut
+                    data={shiftChartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom' as const,
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Attendance Trend */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">معدل الحضور</h3>
+              <div className="h-64">
+                <Bar data={attendanceTrendData} options={attendanceTrendOptions} />
+              </div>
+            </div>
+
+            {/* Attendance Table */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">جدول الحضور والانصراف</h2>
+                <div className="flex items-center gap-4">
+                  {/* Rows per page */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600 dark:text-gray-400">صفوف في الصفحة:</label>
+                    <select
+                      value={rowsPerPage}
+                      onChange={(e) => handleRowsPerPageChange(Number(e.target.value))}
+                      className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <AttendanceTable data={attendanceData} />
+
+              {/* Pagination */}
+              <div className="flex justify-between items-center mt-6">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  عرض {((paginationInfo.currentPage - 1) * paginationInfo.limit) + 1} إلى{' '}
+                  {Math.min(paginationInfo.currentPage * paginationInfo.limit, paginationInfo.totalCount)} من{' '}
+                  {paginationInfo.totalCount} نتيجة
+                </div>
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePageChange(paginationInfo.currentPage - 1)}
+                    disabled={!paginationInfo.hasPrevPage}
+                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    السابق
+                  </button>
+                  
+                  <span className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">
+                    صفحة {paginationInfo.currentPage} من {paginationInfo.totalPages}
+                  </span>
+                  
+                  <button
+                    onClick={() => handlePageChange(paginationInfo.currentPage + 1)}
+                    disabled={!paginationInfo.hasNextPage}
+                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    التالي
+                  </button>
+                </div>
+              </div>
+
+              {/* Debug Info */}
+              <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                Debug: Page={page}, TotalPages={paginationInfo.totalPages}, TotalCount={paginationInfo.totalCount}, HasNext={paginationInfo.hasNextPage}, HasPrev={paginationInfo.hasPrevPage}
+              </div>
+            </div>
           </div>
         </div>
-        </FilterProvider>
-      </main>
       </div>
+    </FilterProvider>
   );
 }

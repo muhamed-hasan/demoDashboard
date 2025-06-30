@@ -16,7 +16,7 @@ function formatTime(dateTimeString: string): string {
       hour12: true 
     });
     return `${day} ${time}`;
-  } catch (error) {
+  } catch {
     return dateTimeString;
   }
 }
@@ -31,12 +31,12 @@ export async function GET(request: Request) {
     const searchQuery = searchParams.get('q');
 
     // Build the JOIN query with filters
-    let baseQuery = `
+    const baseQuery = `
       FROM table3 t
       LEFT JOIN details d ON t.id = d.id::text
     `;
-    let whereConditions: string[] = [];
-    let values: any[] = [];
+    const whereConditions: string[] = [];
+    const values: (string | number)[] = [];
     let paramIndex = 1;
 
     // Date range filter
@@ -114,11 +114,11 @@ export async function GET(request: Request) {
     const result = await pool.query(query, values);
     
     // Format the data
-    const enrichedData = result.rows.map((row: any) => {
+    const enrichedData = result.rows.map((row: Record<string, unknown>) => {
       return {
         id: row.id,
-        date: row.date || new Date(row.time).toISOString().split('T')[0],
-        time: formatTime(row.time),
+        date: row.date || new Date(row.time as string).toISOString().split('T')[0],
+        time: formatTime(row.time as string),
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         firstName: row.first_name || row.fname || '',
         lastName: row.last_name || row.lname || '',

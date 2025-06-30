@@ -11,12 +11,12 @@ export async function GET(request: Request) {
     const searchText = searchParams.get('search');
 
     // Build the JOIN query with filters
-    let baseQuery = `
+    const baseQuery = `
       FROM table3 t
       LEFT JOIN details d ON t.id = d.id::text
     `;
-    let whereConditions: string[] = [];
-    let values: any[] = [];
+    const whereConditions: string[] = [];
+    const values: (string | number)[] = [];
     let paramIndex = 1;
 
     // Date range filter
@@ -69,8 +69,8 @@ export async function GET(request: Request) {
 
     // Get total employees count
     let totalEmployeesQuery = 'SELECT COUNT(*) FROM details';
-    let totalEmployeesValues: any[] = [];
-    let totalEmployeesConditions: string[] = [];
+    const totalEmployeesValues: (string | number)[] = [];
+    const totalEmployeesConditions: string[] = [];
 
     // Apply same filters to total employees count
     if (departments.length > 0) {
@@ -111,25 +111,25 @@ export async function GET(request: Request) {
     const result = await pool.query(attendanceQuery, values);
     
     // Get unique employee IDs from filtered attendance records (present employees)
-    const presentEmployeeIds = new Set(result.rows.map((row: any) => row.id?.toString()));
+    const presentEmployeeIds = new Set(result.rows.map((row: Record<string, unknown>) => row.id?.toString()));
     const presentCount = presentEmployeeIds.size;
     const absentCount = totalEmployees - presentCount;
     const attendanceRate = totalEmployees > 0 ? ((presentCount / totalEmployees) * 100).toFixed(2) : '0.00';
 
     // Calculate department distribution from filtered data
     const deptDistribution: { [key: string]: number } = {};
-    result.rows.forEach((row: any) => {
+    result.rows.forEach((row: Record<string, unknown>) => {
       if (row.department) {
-        const dept = row.department;
+        const dept = row.department as string;
         deptDistribution[dept] = (deptDistribution[dept] || 0) + 1;
       }
     });
 
     // Calculate shift distribution from filtered data
     const shiftDistribution: { [key: string]: number } = {};
-    result.rows.forEach((row: any) => {
+    result.rows.forEach((row: Record<string, unknown>) => {
       if (row.shift) {
-        const shift = row.shift;
+        const shift = row.shift as string;
         // Normalize shift names
         const normalizedShift = shift.toLowerCase() === 'day' ? 'Day' : 
                                shift.toLowerCase() === 'night' ? 'Night' : 

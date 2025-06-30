@@ -16,7 +16,7 @@ function formatTime(dateTimeString: string): string {
       hour12: true 
     });
     return `${day} ${time}`;
-  } catch (error) {
+  } catch {
     return dateTimeString; // Return original if parsing fails
   }
 }
@@ -45,12 +45,12 @@ export async function GET(request: Request) {
     });
 
     // Build the JOIN query with filters
-    let baseQuery = `
+    const baseQuery = `
       FROM table3 t
       LEFT JOIN details d ON t.id = d.id::text
     `;
-    let whereConditions: string[] = [];
-    let values: any[] = [];
+    const whereConditions: string[] = [];
+    const values: (string | number)[] = [];
     let paramIndex = 1;
 
     // Date range filter
@@ -153,12 +153,12 @@ export async function GET(request: Request) {
     });
     
     // Format the data
-    const enrichedData = result.rows.map((row: any) => {
+    const enrichedData = result.rows.map((row: Record<string, unknown>) => {
       // Format date properly
       let formattedDate = row.date;
       if (row.date) {
         try {
-          const dateObj = new Date(row.date);
+          const dateObj = new Date(row.date as string);
           if (!isNaN(dateObj.getTime())) {
             formattedDate = dateObj.toISOString();
           }
@@ -169,7 +169,7 @@ export async function GET(request: Request) {
       
       const enrichedItem = {
         id: row.id,
-        time: formatTime(row.time),
+        time: formatTime(row.time as string),
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         shift: row.shift || '',
         department: row.department || row.group || '',

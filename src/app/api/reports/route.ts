@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
       LEFT JOIN table3 t ON d.id::text = t.id
     `;
 
-    const params: any[] = [];
-    let whereConditions: string[] = [];
+    const params: (string | number)[] = [];
+    const whereConditions: string[] = [];
 
     if (startDate && endDate) {
       whereConditions.push(`DATE(t.time) BETWEEN $${params.length + 1} AND $${params.length + 2}`);

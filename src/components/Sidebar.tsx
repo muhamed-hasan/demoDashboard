@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { FaTachometerAlt, FaUsers, FaMoon, FaSun, FaDatabase } from 'react-icons/fa';
+import { FaTachometerAlt, FaMoon, FaSun, FaDatabase } from 'react-icons/fa';
 
 const THEME_COOKIE = 'theme';
 

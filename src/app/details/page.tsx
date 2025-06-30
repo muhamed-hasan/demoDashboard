@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaDatabase, FaUsers, FaSearch, FaFilter, FaTrash, FaEdit, FaPlus, FaTimes } from 'react-icons/fa';
 
 interface EmployeeDetail {
@@ -60,30 +60,7 @@ export default function DetailsPage() {
     fetchEmployees();
   }, []);
 
-  useEffect(() => {
-    filterEmployees();
-  }, [employees, searchTerm, departmentFilter, shiftFilter]);
-
-  const fetchEmployees = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/details');
-      const result = await response.json();
-
-      if (result.success) {
-        setEmployees(result.data);
-        setError(null);
-      } else {
-        setError(result.error || 'حدث خطأ أثناء جلب البيانات');
-      }
-    } catch (error) {
-      setError('حدث خطأ في الاتصال بالخادم');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filterEmployees = () => {
+  const filterEmployees = useCallback(() => {
     let filtered = employees;
 
     // Search filter
@@ -106,6 +83,29 @@ export default function DetailsPage() {
     }
 
     setFilteredEmployees(filtered);
+  }, [employees, searchTerm, departmentFilter, shiftFilter]);
+
+  useEffect(() => {
+    filterEmployees();
+  }, [filterEmployees]);
+
+  const fetchEmployees = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/details');
+      const result = await response.json();
+
+      if (result.success) {
+        setEmployees(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'حدث خطأ أثناء جلب البيانات');
+      }
+    } catch {
+      setError('حدث خطأ في الاتصال بالخادم');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const clearFilters = () => {
@@ -140,7 +140,7 @@ export default function DetailsPage() {
       } else {
         alert(result.error || 'حدث خطأ أثناء حذف الموظف');
       }
-    } catch (error) {
+    } catch {
       alert('حدث خطأ في الاتصال بالخادم');
     } finally {
       setIsDeleting(false);
@@ -222,21 +222,11 @@ export default function DetailsPage() {
       } else {
         alert(result.error || 'حدث خطأ أثناء إضافة الموظف');
       }
-    } catch (error) {
+    } catch {
       alert('حدث خطأ في الاتصال بالخادم');
     } finally {
       setIsAdding(false);
     }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      first_name: '',
-      last_name: '',
-      department: '',
-      shift: ''
-    });
-    setFormErrors({});
   };
 
   if (isLoading) {
@@ -417,14 +407,7 @@ export default function DetailsPage() {
             </div>
           </div>
 
-          {/* Results Count */}
-          <div className="mb-4">
-            <p className="text-gray-600 dark:text-gray-400">
-              تم العثور على <span className="font-semibold text-gray-900 dark:text-white">{filteredEmployees.length}</span> موظف
-            </p>
-          </div>
-
-          {/* Table */}
+          {/* Employees Table */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -463,68 +446,45 @@ export default function DetailsPage() {
                         {employee.last_name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          {employee.department}
-                        </span>
+                        {employee.department}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {employee.shift ? (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            employee.shift === 'Day' 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                          }`}>
-                            {employee.shift}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-                            غير محدد
-                          </span>
-                        )}
+                        {employee.shift || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => showDeleteConfirm(employee)}
-                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                            title="حذف الموظف"
-                          >
-                            <FaTrash className="text-sm" />
-                          </button>
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => showDeleteConfirm(employee)}
+                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          <FaTrash />
+                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-
-            {filteredEmployees.length === 0 && (
-              <div className="text-center py-12">
-                <FaUsers className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">لا توجد نتائج</h3>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  جرب تغيير الفلاتر أو البحث عن شيء آخر.
-                </p>
-              </div>
-            )}
           </div>
+
+          {/* No Results */}
+          {filteredEmployees.length === 0 && !isLoading && (
+            <div className="text-center py-12">
+              <FaSearch className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">لا توجد نتائج</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                جرب تغيير الفلاتر أو البحث عن شيء آخر.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Add Employee Modal */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <FaPlus className="text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  إضافة موظف جديد
-                </h3>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">إضافة موظف جديد</h2>
               <button
                 onClick={() => setShowAddForm(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -532,114 +492,105 @@ export default function DetailsPage() {
                 <FaTimes />
               </button>
             </div>
-            
+
             <form onSubmit={(e) => { e.preventDefault(); addEmployee(); }}>
-              {/* First Name */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  الاسم الأول *
-                </label>
-                <input
-                  type="text"
-                  value={formData.first_name}
-                  onChange={(e) => handleInputChange('first_name', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                    formErrors.first_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                  placeholder="أدخل الاسم الأول"
-                />
-                {formErrors.first_name && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.first_name}</p>
-                )}
+              <div className="space-y-4">
+                {/* First Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    الاسم الأول *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.first_name}
+                    onChange={(e) => handleInputChange('first_name', e.target.value)}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                      formErrors.first_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    placeholder="أدخل الاسم الأول"
+                  />
+                  {formErrors.first_name && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.first_name}</p>
+                  )}
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    الاسم الأخير *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.last_name}
+                    onChange={(e) => handleInputChange('last_name', e.target.value)}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                      formErrors.last_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    placeholder="أدخل الاسم الأخير"
+                  />
+                  {formErrors.last_name && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.last_name}</p>
+                  )}
+                </div>
+
+                {/* Department */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    القسم *
+                  </label>
+                  <select
+                    value={formData.department}
+                    onChange={(e) => handleInputChange('department', e.target.value)}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                      formErrors.department ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    <option value="">اختر القسم</option>
+                    {availableDepartments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                  {formErrors.department && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.department}</p>
+                  )}
+                </div>
+
+                {/* Shift */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    الشيفت
+                  </label>
+                  <select
+                    value={formData.shift}
+                    onChange={(e) => handleInputChange('shift', e.target.value)}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                      formErrors.shift ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    <option value="">اختر الشيفت</option>
+                    <option value="Day">صباحي</option>
+                    <option value="Night">مسائي</option>
+                  </select>
+                  {formErrors.shift && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.shift}</p>
+                  )}
+                </div>
               </div>
 
-              {/* Last Name */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  الاسم الأخير *
-                </label>
-                <input
-                  type="text"
-                  value={formData.last_name}
-                  onChange={(e) => handleInputChange('last_name', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                    formErrors.last_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                  placeholder="أدخل الاسم الأخير"
-                />
-                {formErrors.last_name && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.last_name}</p>
-                )}
-              </div>
-
-              {/* Department */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  القسم *
-                </label>
-                <select
-                  value={formData.department}
-                  onChange={(e) => handleInputChange('department', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                    formErrors.department ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                >
-                  <option value="">اختر القسم</option>
-                  {availableDepartments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
-                {formErrors.department && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.department}</p>
-                )}
-              </div>
-
-              {/* Shift */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  الشيفت
-                </label>
-                <select
-                  value={formData.shift}
-                  onChange={(e) => handleInputChange('shift', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                    formErrors.shift ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                >
-                  <option value="">غير محدد</option>
-                  <option value="Day">صباحي</option>
-                  <option value="Night">مسائي</option>
-                </select>
-                {formErrors.shift && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.shift}</p>
-                )}
-              </div>
-              
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  disabled={isAdding}
-                  className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  إلغاء
-                </button>
+              <div className="flex gap-3 mt-6">
                 <button
                   type="submit"
                   disabled={isAdding}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors"
                 >
-                  {isAdding ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      جاري الإضافة...
-                    </>
-                  ) : (
-                    <>
-                      <FaPlus />
-                      إضافة
-                    </>
-                  )}
+                  {isAdding ? 'جاري الإضافة...' : 'إضافة'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(false)}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  إلغاء
                 </button>
               </div>
             </form>
@@ -648,55 +599,34 @@ export default function DetailsPage() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirm.show && deleteConfirm.employee && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-                <FaTrash className="text-red-600 dark:text-red-400" />
+      {deleteConfirm.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="text-center">
+              <FaTrash className="mx-auto h-12 w-12 text-red-600 dark:text-red-400 mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">تأكيد الحذف</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                هل أنت متأكد من حذف الموظف{' '}
+                <span className="font-semibold">
+                  {deleteConfirm.employee?.first_name} {deleteConfirm.employee?.last_name}
+                </span>
+                ؟
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={deleteEmployee}
+                  disabled={isDeleting}
+                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  {isDeleting ? 'جاري الحذف...' : 'حذف'}
+                </button>
+                <button
+                  onClick={hideDeleteConfirm}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  إلغاء
+                </button>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                تأكيد الحذف
-              </h3>
-            </div>
-            
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              هل أنت متأكد من حذف الموظف{' '}
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {deleteConfirm.employee.first_name} {deleteConfirm.employee.last_name}
-              </span>
-              {' '}من رقم {deleteConfirm.employee.id}؟
-            </p>
-            
-            <p className="text-sm text-red-600 dark:text-red-400 mb-6">
-              ⚠️ هذا الإجراء لا يمكن التراجع عنه.
-            </p>
-            
-            <div className="flex gap-3">
-              <button
-                onClick={hideDeleteConfirm}
-                disabled={isDeleting}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={deleteEmployee}
-                disabled={isDeleting}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                {isDeleting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    جاري الحذف...
-                  </>
-                ) : (
-                  <>
-                    <FaTrash />
-                    حذف
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>
