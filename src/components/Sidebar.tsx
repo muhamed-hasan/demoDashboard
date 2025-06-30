@@ -57,10 +57,6 @@ const Sidebar = () => {
           <FaDatabase className="text-lg" />
           <span>Details</span>
         </Link>
-        <Link href="/data-management" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${pathname === '/data-management' ? 'bg-[#2563eb] text-white' : 'hover:bg-[#232A47]'} ${theme === 'dark' ? 'hover:bg-[#1e293b]' : ''}`}>
-          <FaUsers className="text-lg" />
-          <span>Employees</span>
-        </Link>
       </nav>
       <button
         onClick={toggleTheme}

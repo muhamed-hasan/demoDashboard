@@ -211,6 +211,18 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                     {rec.date ? (() => {
                       try {
+                        // If date is already in YYYY-MM-DD format, format it nicely
+                        if (typeof rec.date === 'string' && rec.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                          const [year, month, day] = rec.date.split('-');
+                          const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                          return date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          });
+                        }
+                        
+                        // Otherwise, try to parse as full date string
                         const date = new Date(rec.date);
                         if (!isNaN(date.getTime())) {
                           return date.toLocaleDateString('en-US', {
