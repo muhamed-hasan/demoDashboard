@@ -38,13 +38,20 @@ export default function ReportsPage() {
     
     fetch(`/api/reports?${params.toString()}`)
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch data");
+        if (!res.ok) {
+          return res.json().then(errorData => {
+            throw new Error(errorData.error || errorData.details || "Failed to fetch data");
+          });
+        }
         return res.json();
       })
       .then((data) => {
         setRecords(data);
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => {
+        console.error('Error fetching reports:', err);
+        setError(err.message || 'حدث خطأ أثناء جلب البيانات');
+      })
       .finally(() => setLoading(false));
   }, [selectedDate, selectedDepartment]);
 
@@ -201,10 +208,60 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.department}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.shift}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.login || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.logout || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{rec.hours} ساعة</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {rec.date ? (() => {
+                      try {
+                        const date = new Date(rec.date);
+                        if (!isNaN(date.getTime())) {
+                          return date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          });
+                        }
+                      } catch (error) {
+                        console.error('Error formatting date:', rec.date, error);
+                      }
+                      return rec.date;
+                    })() : '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {rec.login ? (() => {
+                      try {
+                        const time = new Date(rec.login);
+                        if (!isNaN(time.getTime())) {
+                          return time.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          });
+                        }
+                      } catch (error) {
+                        console.error('Error formatting login time:', rec.login, error);
+                      }
+                      return rec.login;
+                    })() : '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {rec.logout ? (() => {
+                      try {
+                        const time = new Date(rec.logout);
+                        if (!isNaN(time.getTime())) {
+                          return time.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          });
+                        }
+                      } catch (error) {
+                        console.error('Error formatting logout time:', rec.logout, error);
+                      }
+                      return rec.logout;
+                    })() : '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {rec.hours > 0 ? `${rec.hours.toFixed(2)} ساعة` : '-'}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       rec.status === 'Present' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
