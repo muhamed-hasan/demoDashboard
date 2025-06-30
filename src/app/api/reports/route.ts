@@ -63,8 +63,8 @@ export async function GET(request: Request) {
     const reportsData = result.rows.map((row: any) => {
       const hours = calculateHours(row.first_login, row.last_logout);
       
-      // Use the date directly from database without timezone conversion
-      const formattedDate = row.date ? row.date.toString() : '';
+      // Use the date directly from database (it's already a date type)
+      const formattedDate = row.date || '';
       
       return {
         id: row.id,

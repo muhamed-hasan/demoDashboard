@@ -112,7 +112,7 @@ export async function GET(request: Request) {
     const enrichedData = result.rows.map((row: any) => {
       return {
         id: row.id,
-        date: row.date ? row.date.toString() : '',
+        date: row.date || '',
         time: formatTime(row.time),
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         firstName: row.first_name || row.fname || '',
