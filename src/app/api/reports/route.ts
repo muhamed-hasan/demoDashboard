@@ -1,6 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
+// Helper function to fix date parsing issues
+function fixDateString(dateString: string): Date {
+  try {
+    let date = new Date(dateString);
+    
+    // If the year is wrong (like 2001), try to fix it
+    if (date.getFullYear() < 2020 && typeof dateString === 'string' && dateString.includes(' ')) {
+      const parts = dateString.split(' ');
+      if (parts.length >= 2) {
+        const datePart = parts[0];
+        const timePart = parts[1];
+        
+        const dateParts = datePart.split('-');
+        if (dateParts.length === 3) {
+          const year = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+          const day = parseInt(dateParts[2]);
+          
+          // If year is wrong, use current year or 2025
+          const correctYear = year < 2020 ? 2025 : year;
+          date = new Date(correctYear, month, day);
+          
+          // Add time if available
+          if (timePart) {
+            const timeParts = timePart.split(':');
+            if (timeParts.length >= 2) {
+              const hours = parseInt(timeParts[0]);
+              const minutes = parseInt(timeParts[1]);
+              const seconds = timeParts[2] ? parseInt(timeParts[2]) : 0;
+              date.setHours(hours, minutes, seconds);
+            }
+          }
+        }
+      }
+    }
+    
+    return date;
+  } catch (error) {
+    console.error('Error fixing date string:', dateString, error);
+    return new Date(dateString);
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -70,8 +113,9 @@ export async function GET(request: NextRequest) {
       
       if (row.login_time && row.logout_time) {
         try {
-          const loginTime = new Date(row.login_time);
-          const logoutTime = new Date(row.logout_time);
+          const loginTime = fixDateString(row.login_time);
+          const logoutTime = fixDateString(row.logout_time);
+          
           if (!isNaN(loginTime.getTime()) && !isNaN(logoutTime.getTime())) {
             hours = (logoutTime.getTime() - loginTime.getTime()) / (1000 * 60 * 60); // Convert to hours
           }
@@ -113,19 +157,38 @@ export async function GET(request: NextRequest) {
         // Update existing record with earliest login and latest logout
         const existing = groupedData.get(key);
         
-        if (record.login && (!existing.firstLogin || new Date(record.login) < new Date(existing.firstLogin))) {
+        if (record.login && (!existing.firstLogin || (() => {
+          try {
+            const loginTime = fixDateString(record.login);
+            const existingLoginTime = fixDateString(existing.firstLogin);
+            return !isNaN(loginTime.getTime()) && !isNaN(existingLoginTime.getTime()) && loginTime < existingLoginTime;
+          } catch (error) {
+            console.error('Error comparing login times:', error);
+            return false;
+          }
+        })())) {
           existing.firstLogin = record.login;
         }
         
-        if (record.logout && (!existing.lastLogout || new Date(record.logout) > new Date(existing.lastLogout))) {
+        if (record.logout && (!existing.lastLogout || (() => {
+          try {
+            const logoutTime = fixDateString(record.logout);
+            const existingLogoutTime = fixDateString(existing.lastLogout);
+            return !isNaN(logoutTime.getTime()) && !isNaN(existingLogoutTime.getTime()) && logoutTime > existingLogoutTime;
+          } catch (error) {
+            console.error('Error comparing logout times:', error);
+            return false;
+          }
+        })())) {
           existing.lastLogout = record.logout;
         }
         
         // Recalculate total hours
         if (existing.firstLogin && existing.lastLogout) {
           try {
-            const loginTime = new Date(existing.firstLogin);
-            const logoutTime = new Date(existing.lastLogout);
+            const loginTime = fixDateString(existing.firstLogin);
+            const logoutTime = fixDateString(existing.lastLogout);
+            
             if (!isNaN(loginTime.getTime()) && !isNaN(logoutTime.getTime())) {
               existing.totalHours = Math.round(((logoutTime.getTime() - loginTime.getTime()) / (1000 * 60 * 60)) * 100) / 100;
             }

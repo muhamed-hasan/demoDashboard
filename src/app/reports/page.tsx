@@ -1,6 +1,49 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
+// Helper function to fix date parsing issues
+function fixDateString(dateString: string): Date {
+  try {
+    let date = new Date(dateString);
+    
+    // If the year is wrong (like 2001), try to fix it
+    if (date.getFullYear() < 2020 && typeof dateString === 'string' && dateString.includes(' ')) {
+      const parts = dateString.split(' ');
+      if (parts.length >= 2) {
+        const datePart = parts[0];
+        const timePart = parts[1];
+        
+        const dateParts = datePart.split('-');
+        if (dateParts.length === 3) {
+          const year = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+          const day = parseInt(dateParts[2]);
+          
+          // If year is wrong, use current year or 2025
+          const correctYear = year < 2020 ? 2025 : year;
+          date = new Date(correctYear, month, day);
+          
+          // Add time if available
+          if (timePart) {
+            const timeParts = timePart.split(':');
+            if (timeParts.length >= 2) {
+              const hours = parseInt(timeParts[0]);
+              const minutes = parseInt(timeParts[1]);
+              const seconds = timeParts[2] ? parseInt(timeParts[2]) : 0;
+              date.setHours(hours, minutes, seconds);
+            }
+          }
+        }
+      }
+    }
+    
+    return date;
+  } catch (error) {
+    console.error('Error fixing date string:', dateString, error);
+    return new Date(dateString);
+  }
+}
+
 interface AttendanceRecord {
   id: string;
   name: string;
@@ -223,7 +266,8 @@ export default function ReportsPage() {
                         }
                         
                         // Otherwise, try to parse as full date string
-                        const date = new Date(rec.date);
+                        const date = fixDateString(rec.date);
+                        
                         if (!isNaN(date.getTime())) {
                           return date.toLocaleDateString('en-US', {
                             year: 'numeric',
@@ -240,7 +284,8 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                     {rec.login ? (() => {
                       try {
-                        const time = new Date(rec.login);
+                        const time = fixDateString(rec.login);
+                        
                         if (!isNaN(time.getTime())) {
                           return time.toLocaleTimeString('en-US', {
                             hour: '2-digit',
@@ -257,7 +302,8 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                     {rec.logout ? (() => {
                       try {
-                        const time = new Date(rec.logout);
+                        const time = fixDateString(rec.logout);
+                        
                         if (!isNaN(time.getTime())) {
                           return time.toLocaleTimeString('en-US', {
                             hour: '2-digit',
