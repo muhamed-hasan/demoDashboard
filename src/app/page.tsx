@@ -15,6 +15,7 @@ import {
 import { Doughnut } from 'react-chartjs-2';
 import { FilterProvider } from '@/contexts/FilterContext';
 import AttendanceTable, { AttendanceData } from '@/components/AttendanceTable';
+import { useAttendanceData } from '@/hooks/useAttendanceData';
 
 // Register Chart.js components
 ChartJS.register(
@@ -58,6 +59,19 @@ export default function Home() {
   const [refreshTrigger] = useState(0);
   const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
   const [availableShifts, setAvailableShifts] = useState<string[]>([]);
+
+  // Fetch detailed attendance data
+  const {
+    data: attendanceData,
+    loading: attendanceLoading,
+    error: attendanceError
+  } = useAttendanceData({
+    startDate,
+    endDate,
+    departments: selectedDepartments,
+    shift: selectedShift,
+    search: searchText,
+  });
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [paginationInfo, setPaginationInfo] = useState({
@@ -274,14 +288,17 @@ export default function Home() {
     setPage(1); // Reset to first page when changing rows per page
   };
 
-  // Transform data for AttendanceTable component
-  const attendanceData: AttendanceData[] = data.map(item => ({
+  // Transform data for existing table component
+  const transformedData: AttendanceData[] = data.map(item => ({
     id: item.id,
     date: item.time, // Using time as date for display
     name: item.fullName,
     department: item.department,
     shift: item.shift,
     login: item.time,
+    logout: null,
+    hours: 0,
+    status: 'Present',
   }));
 
   if (loading) {
@@ -328,21 +345,23 @@ export default function Home() {
     setSelectedShift,
     setSearchText,
     }}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-[#264847]">
         <div className="p-6">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                لوحة تحكم الحضور والانصراف
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                عرض إحصائيات الحضور والانصراف للموظفين
-              </p>
+              <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-[#264847]/30">
+                <h1 className="text-4xl font-bold text-[#264847] dark:text-white mb-3">
+                  لوحة تحكم الحضور والانصراف
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 text-lg">
+                  عرض إحصائيات الحضور والانصراف للموظفين
+                </p>
+              </div>
             </div>
 
             {/* Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+            <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-8 mb-8 border border-gray-200 dark:border-[#264847]/30">
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Date Range */}
                 <div>
@@ -352,7 +371,7 @@ export default function Home() {
                   <select
                     value={dateRange}
                     onChange={(e) => handleDateRangeChange(e.target.value as 'today' | 'week' | 'month' | 'year' | 'custom')}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                   >
                     <option value="today">اليوم</option>
                     <option value="week">آخر أسبوع</option>
@@ -373,7 +392,7 @@ export default function Home() {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                       />
                     </div>
                     <div>
@@ -384,7 +403,7 @@ export default function Home() {
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                       />
                     </div>
                   </>
@@ -398,7 +417,7 @@ export default function Home() {
                   <select
                     value={selectedDepartments[0] || ''}
                     onChange={(e) => setSelectedDepartments(e.target.value ? [e.target.value] : [])}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                   >
                     <option value="">كل الأقسام</option>
                     {availableDepartments.map(dept => (
@@ -415,7 +434,7 @@ export default function Home() {
                   <select
                     value={selectedShift}
                     onChange={(e) => setSelectedShift(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                   >
                     <option value="all">كل الشيفتات</option>
                     {availableShifts.map(shift => (
@@ -435,11 +454,11 @@ export default function Home() {
                       placeholder="البحث بالاسم..."
                       value={searchText}
                       onChange={(e) => setSearchText(e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className="flex-1 px-4 py-3 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                     />
                     <button
                       onClick={handleSearch}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      className="px-6 py-3 bg-[#65b12a] hover:bg-[#264847] text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
                     >
                       بحث
                     </button>
@@ -450,7 +469,7 @@ export default function Home() {
                 <div className="flex items-end">
                   <button
                     onClick={handleClearFilters}
-                    className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="w-full bg-gray-500 hover:bg-[#264847] text-white px-4 py-3 rounded-xl transition-all duration-200 font-semibold"
                   >
                     مسح الفلاتر
                   </button>
@@ -461,58 +480,58 @@ export default function Home() {
             {/* Stats Cards */}
             {stats && (
               <div className="grid md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#264847]/30 hover:shadow-xl transition-all duration-200">
               <div className="flex items-center">
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="p-3 bg-gradient-to-br from-[#65b12a]/20 to-[#264847]/20 rounded-xl">
+                  <svg className="w-6 h-6 text-[#65b12a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
                 <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">إجمالي الموظفين</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalEmployees}</p>
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">إجمالي الموظفين</p>
+                      <p className="text-3xl font-bold text-[#264847] dark:text-white">{stats.totalEmployees}</p>
                 </div>
               </div>
             </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#264847]/30 hover:shadow-xl transition-all duration-200">
               <div className="flex items-center">
-                    <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="p-3 bg-gradient-to-br from-[#65b12a]/20 to-green-500/20 rounded-xl">
+                  <svg className="w-6 h-6 text-[#65b12a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">الحضور</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.presentCount}</p>
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">الحضور</p>
+                      <p className="text-3xl font-bold text-[#65b12a]">{stats.presentCount}</p>
                 </div>
               </div>
             </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#264847]/30 hover:shadow-xl transition-all duration-200">
               <div className="flex items-center">
-                    <div className="p-3 bg-red-100 dark:bg-red-900 rounded-lg">
-                  <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="p-3 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-xl">
+                  <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
                 <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">الغياب</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.absentCount}</p>
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">الغياب</p>
+                      <p className="text-3xl font-bold text-red-500">{stats.absentCount}</p>
                 </div>
               </div>
             </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#264847]/30 hover:shadow-xl transition-all duration-200">
               <div className="flex items-center">
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="p-3 bg-gradient-to-br from-[#264847]/20 to-purple-500/20 rounded-xl">
+                  <svg className="w-6 h-6 text-[#264847] dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
                 <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">معدل الحضور</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.attendanceRate}%</p>
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">معدل الحضور</p>
+                      <p className="text-3xl font-bold text-[#264847] dark:text-white">{stats.attendanceRate}%</p>
                 </div>
                   </div>
                 </div>
@@ -523,8 +542,8 @@ export default function Home() {
             {stats?.heidelbergStats && stats?.naserStats && (
               <div className="grid md:grid-cols-2 gap-6 mb-8">
                 {/* Heidelberg Department */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">قسم Heidelberg</h3>
+                <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#264847]/30 hover:shadow-xl transition-all duration-200">
+                  <h3 className="text-xl font-bold text-[#264847] dark:text-white mb-4">قسم Heidelberg</h3>
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-center">
                       <p className="text-sm text-gray-600 dark:text-gray-400">معدل الحضور</p>
@@ -559,8 +578,8 @@ export default function Home() {
             </div>
 
             {/* Naser Department */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">قسم Naser</h3>
+                <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#264847]/30 hover:shadow-xl transition-all duration-200">
+                  <h3 className="text-xl font-bold text-[#264847] dark:text-white mb-4">قسم Naser</h3>
                   <div className="flex items-center justify-between mb-4">
                 <div className="text-center">
                       <p className="text-sm text-gray-600 dark:text-gray-400">معدل الحضور</p>
@@ -598,9 +617,9 @@ export default function Home() {
 
           
             {/* Attendance Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-[#264847]/30">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">جدول الحضور والانصراف</h2>
+                <h2 className="text-2xl font-bold text-[#264847] dark:text-white">جدول الحضور والانصراف</h2>
                 <div className="flex items-center gap-4">
                   {/* Rows per page */}
                   <div className="flex items-center gap-2">
@@ -608,7 +627,7 @@ export default function Home() {
                 <select
                       value={rowsPerPage}
                       onChange={(e) => handleRowsPerPageChange(Number(e.target.value))}
-                      className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className="px-3 py-2 border border-gray-300 dark:border-[#264847]/30 rounded-xl focus:ring-2 focus:ring-[#65b12a] focus:border-[#65b12a] dark:bg-[#264847] dark:text-white font-medium"
                     >
                       <option value={5}>5</option>
                       <option value={10}>10</option>
@@ -619,7 +638,7 @@ export default function Home() {
                   </div>
               </div>
 
-              <AttendanceTable data={attendanceData} />
+              <AttendanceTable data={transformedData} />
 
               {/* Pagination */}
               <div className="flex justify-between items-center mt-6">
@@ -633,7 +652,7 @@ export default function Home() {
                   <button
                     onClick={() => handlePageChange(paginationInfo.currentPage - 1)}
                     disabled={!paginationInfo.hasPrevPage}
-                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="px-4 py-2 border border-[#264847]/20 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#65b12a] hover:text-white transition-all duration-200 font-semibold text-[#264847] dark:text-white dark:border-[#264847]/30 dark:hover:bg-[#65b12a]"
                   >
                     السابق
                   </button>
@@ -645,7 +664,7 @@ export default function Home() {
                     <button
                     onClick={() => handlePageChange(paginationInfo.currentPage + 1)}
                       disabled={!paginationInfo.hasNextPage}
-                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="px-4 py-2 border border-[#264847]/20 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#65b12a] hover:text-white transition-all duration-200 font-semibold text-[#264847] dark:text-white dark:border-[#264847]/30 dark:hover:bg-[#65b12a]"
                   >
                     التالي
                     </button>
@@ -657,6 +676,38 @@ export default function Home() {
                   Debug: Page={page}, TotalPages={paginationInfo.totalPages}, TotalCount={paginationInfo.totalCount}, HasNext={paginationInfo.hasNextPage}, HasPrev={paginationInfo.hasPrevPage}
                 </div>
               </div>
+
+            {/* Detailed Attendance Table Section */}
+            <div className="mt-8">
+              <div className="bg-white dark:bg-[#264847] rounded-2xl shadow-lg p-8 mb-4 border border-gray-200 dark:border-[#264847]/30">
+                <h2 className="text-2xl font-bold text-[#264847] dark:text-white mb-2">
+                  Detailed Attendance Records
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Complete attendance information with sorting and pagination
+                </p>
+              </div>
+              
+              {attendanceError && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/30 rounded-xl p-4 mb-4">
+                  <div className="flex">
+                    <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <div className="ml-3">
+                      <p className="text-sm text-red-800 dark:text-red-200 font-medium">
+                        Error loading attendance data: {attendanceError}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <AttendanceTable 
+                data={attendanceData} 
+                loading={attendanceLoading} 
+              />
+            </div>
           </div>
         </div>
       </div>

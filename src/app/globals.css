@@ -10,6 +10,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  
+  /* Custom brand colors */
+  --color-brand-green: #65b12a;
+  --color-brand-teal: #264847;
+  --color-brand-green-rgb: 101 177 42;
+  --color-brand-teal-rgb: 38 72 71;
 }
 
 @media (prefers-color-scheme: dark) {
