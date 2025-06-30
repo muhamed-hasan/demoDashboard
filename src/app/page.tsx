@@ -297,12 +297,10 @@ export default function Home() {
   const attendanceData: AttendanceData[] = data.map(item => ({
     id: item.id,
     date: item.time, // Using time as date for display
-    time: item.time,
-    fullName: item.fullName,
-    firstName: item.firstName || '',
-    lastName: item.lastName || '',
-    shift: item.shift,
+    name: item.fullName,
     department: item.department,
+    shift: item.shift,
+    login: item.time,
   }));
 
   // Chart data for department distribution
@@ -407,7 +405,20 @@ export default function Home() {
   }
 
   return (
-    <FilterProvider>
+    <FilterProvider value={{
+      dateRange,
+      startDate,
+      endDate,
+      selectedDepartments,
+      selectedShift,
+      searchText,
+      setDateRange,
+      setStartDate,
+      setEndDate,
+      setSelectedDepartments,
+      setSelectedShift,
+      setSearchText,
+    }}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="p-6">
           <div className="max-w-7xl mx-auto">
