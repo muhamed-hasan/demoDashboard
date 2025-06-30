@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'attendance-dashboard',
-      script: 'npm',
+      script: 'node_modules/.bin/next',
       args: 'start',
       cwd: './',
       instances: 1,
@@ -20,7 +20,9 @@ module.exports = {
       error_file: './logs/err.log',
       out_file: './logs/out.log',
       log_file: './logs/combined.log',
-      time: true
+      time: true,
+      min_uptime: '10s',
+      max_restarts: 10
     }
   ]
 }; 
