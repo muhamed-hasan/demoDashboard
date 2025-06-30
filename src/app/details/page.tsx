@@ -258,22 +258,22 @@ export default function DetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8 flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-modern bg-clip-text text-transparent mb-2">
                 تفاصيل الموظفين
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
                 عرض بيانات الموظفين من قاعدة البيانات
               </p>
             </div>
             <button
               onClick={() => setShowAddForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              className="btn-modern flex items-center gap-2"
             >
               <FaPlus />
               إضافة موظف جديد
@@ -282,7 +282,7 @@ export default function DetailsPage() {
 
           {/* Stats Cards */}
           <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <div className="modern-card rounded-2xl p-6">
               <div className="flex items-center">
                 <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
                   <FaUsers className="text-2xl text-blue-600 dark:text-blue-400" />
@@ -294,9 +294,9 @@ export default function DetailsPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <div className="modern-card rounded-2xl p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-xl">
                   <FaDatabase className="text-2xl text-green-600 dark:text-green-400" />
                 </div>
                 <div className="ml-4">
@@ -306,9 +306,9 @@ export default function DetailsPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <div className="modern-card rounded-2xl p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-xl">
                   <FaUsers className="text-2xl text-purple-600 dark:text-purple-400" />
                 </div>
                 <div className="ml-4">
@@ -320,9 +320,9 @@ export default function DetailsPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <div className="modern-card rounded-2xl p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
+                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-xl">
                   <FaUsers className="text-2xl text-orange-600 dark:text-orange-400" />
                 </div>
                 <div className="ml-4">
@@ -336,7 +336,7 @@ export default function DetailsPage() {
           </div>
 
           {/* Filters */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <div className="modern-card rounded-2xl p-6 mb-6">
             <div className="flex items-center gap-4 mb-4">
               <FaFilter className="text-gray-600 dark:text-gray-400" />
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">الفلاتر</h2>
@@ -355,7 +355,7 @@ export default function DetailsPage() {
                     placeholder="البحث بالاسم أو الرقم..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="input-modern w-full pl-10 pr-4"
                   />
                 </div>
               </div>
@@ -368,7 +368,7 @@ export default function DetailsPage() {
                 <select
                   value={departmentFilter}
                   onChange={(e) => setDepartmentFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="input-modern w-full"
                 >
                   <option value="">كل الأقسام</option>
                   {departments.map(dept => (
@@ -385,7 +385,7 @@ export default function DetailsPage() {
                 <select
                   value={shiftFilter}
                   onChange={(e) => setShiftFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="input-modern w-full"
                 >
                   <option value="">كل الشيفتات</option>
                   {shifts.map(shift => (
@@ -398,7 +398,7 @@ export default function DetailsPage() {
               <div className="flex items-end">
                 <button
                   onClick={clearFilters}
-                  className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  className="btn-modern-secondary w-full"
                 >
                   مسح الفلاتر
                 </button>

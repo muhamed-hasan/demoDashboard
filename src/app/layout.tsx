@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // تحديد الثيم من الكوكيز (SSR/CSR)
-  let htmlClass = `${inter.variable} antialiased bg-gradient-to-tr from-indigo-100 via-white to-blue-100 min-h-screen`;
+  let htmlClass = `${inter.variable} antialiased bg-gradient-subtle min-h-screen`;
   if (typeof window !== 'undefined') {
     if (document.cookie.includes('theme=dark')) {
       htmlClass += ' dark';
@@ -34,10 +34,10 @@ export default function RootLayout({
           <Sidebar />
           <div className="flex-1 flex flex-col min-h-screen pl-64">
             {/* Header */}
-            <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200 flex items-center justify-between px-8 py-4 shadow-sm">
+            <header className="sticky top-0 z-30 header-modern flex items-center justify-between px-8 py-4 shadow-sm">
               <div></div>
               <div className="flex items-center gap-6">
-                <button className="p-2 rounded-full hover:bg-indigo-100 text-indigo-600">
+                <button className="p-3 rounded-full hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400 transition-colors duration-200">
                   <FaCog className="text-lg" />
                 </button>
               </div>

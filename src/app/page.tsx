@@ -328,21 +328,21 @@ export default function Home() {
     setSelectedShift,
     setSearchText,
     }}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen">
         <div className="p-6">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-modern bg-clip-text text-transparent mb-2">
                 لوحة تحكم الحضور والانصراف
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
                 عرض إحصائيات الحضور والانصراف للموظفين
               </p>
             </div>
 
             {/* Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+            <div className="modern-card rounded-2xl p-6 mb-8">
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Date Range */}
                 <div>
@@ -352,7 +352,7 @@ export default function Home() {
                   <select
                     value={dateRange}
                     onChange={(e) => handleDateRangeChange(e.target.value as 'today' | 'week' | 'month' | 'year' | 'custom')}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="input-modern w-full"
                   >
                     <option value="today">اليوم</option>
                     <option value="week">آخر أسبوع</option>
@@ -373,7 +373,7 @@ export default function Home() {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="input-modern w-full"
                       />
                     </div>
                     <div>
@@ -384,7 +384,7 @@ export default function Home() {
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="input-modern w-full"
                       />
                     </div>
                   </>
@@ -398,7 +398,7 @@ export default function Home() {
                   <select
                     value={selectedDepartments[0] || ''}
                     onChange={(e) => setSelectedDepartments(e.target.value ? [e.target.value] : [])}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="input-modern w-full"
                   >
                     <option value="">كل الأقسام</option>
                     {availableDepartments.map(dept => (
@@ -415,7 +415,7 @@ export default function Home() {
                   <select
                     value={selectedShift}
                     onChange={(e) => setSelectedShift(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="input-modern w-full"
                   >
                     <option value="all">كل الشيفتات</option>
                     {availableShifts.map(shift => (
@@ -435,11 +435,11 @@ export default function Home() {
                       placeholder="البحث بالاسم..."
                       value={searchText}
                       onChange={(e) => setSearchText(e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className="input-modern flex-1"
                     />
                     <button
                       onClick={handleSearch}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      className="btn-modern px-6"
                     >
                       بحث
                     </button>
@@ -450,7 +450,7 @@ export default function Home() {
                 <div className="flex items-end">
                   <button
                     onClick={handleClearFilters}
-                    className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="btn-modern-secondary w-full"
                   >
                     مسح الفلاتر
                   </button>
@@ -461,7 +461,7 @@ export default function Home() {
             {/* Stats Cards */}
             {stats && (
               <div className="grid md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="modern-card rounded-2xl p-6">
               <div className="flex items-center">
                     <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
                   <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -475,9 +475,9 @@ export default function Home() {
               </div>
             </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="modern-card rounded-2xl p-6">
               <div className="flex items-center">
-                    <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                    <div className="p-3 bg-green-100 dark:bg-green-900 rounded-xl">
                   <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -489,9 +489,9 @@ export default function Home() {
               </div>
             </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="modern-card rounded-2xl p-6">
               <div className="flex items-center">
-                    <div className="p-3 bg-red-100 dark:bg-red-900 rounded-lg">
+                    <div className="p-3 bg-red-100 dark:bg-red-900 rounded-xl">
                   <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -503,9 +503,9 @@ export default function Home() {
               </div>
             </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="modern-card rounded-2xl p-6">
               <div className="flex items-center">
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                    <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-xl">
                   <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
@@ -523,8 +523,8 @@ export default function Home() {
             {stats?.heidelbergStats && stats?.naserStats && (
               <div className="grid md:grid-cols-2 gap-6 mb-8">
                 {/* Heidelberg Department */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">قسم Heidelberg</h3>
+                <div className="modern-card rounded-2xl p-6">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">قسم Heidelberg</h3>
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-center">
                       <p className="text-sm text-gray-600 dark:text-gray-400">معدل الحضور</p>
@@ -540,7 +540,7 @@ export default function Home() {
                           labels: ['حاضر', 'غائب'],
                       datasets: [{
                             data: [stats.heidelbergStats.presentCount, stats.heidelbergStats.absentCount],
-                        backgroundColor: ['#10B981', '#EF4444'],
+                        backgroundColor: ['#65b12a', '#264847'],
                             borderWidth: 0,
                       }]
                     }} 
@@ -559,8 +559,8 @@ export default function Home() {
             </div>
 
             {/* Naser Department */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">قسم Naser</h3>
+                <div className="modern-card rounded-2xl p-6">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">قسم Naser</h3>
                   <div className="flex items-center justify-between mb-4">
                 <div className="text-center">
                       <p className="text-sm text-gray-600 dark:text-gray-400">معدل الحضور</p>
@@ -576,7 +576,7 @@ export default function Home() {
                           labels: ['حاضر', 'غائب'],
                           datasets: [{
                             data: [stats.naserStats.presentCount, stats.naserStats.absentCount],
-                            backgroundColor: ['#10B981', '#EF4444'],
+                            backgroundColor: ['#65b12a', '#264847'],
                             borderWidth: 0,
                           }]
                         }}
@@ -598,9 +598,9 @@ export default function Home() {
 
           
             {/* Attendance Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <div className="table-modern rounded-2xl p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">جدول الحضور والانصراف</h2>
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">جدول الحضور والانصراف</h2>
                 <div className="flex items-center gap-4">
                   {/* Rows per page */}
                   <div className="flex items-center gap-2">
@@ -608,7 +608,7 @@ export default function Home() {
                 <select
                       value={rowsPerPage}
                       onChange={(e) => handleRowsPerPageChange(Number(e.target.value))}
-                      className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className="input-modern px-3 py-1"
                     >
                       <option value={5}>5</option>
                       <option value={10}>10</option>
@@ -633,7 +633,7 @@ export default function Home() {
                   <button
                     onClick={() => handlePageChange(paginationInfo.currentPage - 1)}
                     disabled={!paginationInfo.hasPrevPage}
-                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="btn-modern-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     السابق
                   </button>
@@ -645,7 +645,7 @@ export default function Home() {
                     <button
                     onClick={() => handlePageChange(paginationInfo.currentPage + 1)}
                       disabled={!paginationInfo.hasNextPage}
-                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="btn-modern-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     التالي
                     </button>

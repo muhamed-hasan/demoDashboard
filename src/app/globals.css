@@ -3,23 +3,29 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary-green: #65b12a;
+  --primary-teal: #264847;
+  --primary-green-light: #7bc142;
+  --primary-teal-light: #2d5a57;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary-green: var(--primary-green);
+  --color-primary-teal: var(--primary-teal);
   --font-sans: var(--font-inter);
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #111827;
-    --foreground: #ededed;
+    --background: #0f1a1a;
+    --foreground: #f8fafc;
   }
   body {
-    background: #111827 !important;
-    color: #ededed !important;
+    background: #0f1a1a !important;
+    color: #f8fafc !important;
   }
 }
 
@@ -29,56 +35,196 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Modern gradient backgrounds */
+.bg-gradient-modern {
+  background: linear-gradient(135deg, #65b12a 0%, #264847 100%);
+}
+
+.bg-gradient-subtle {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.dark .bg-gradient-subtle {
+  background: linear-gradient(135deg, #0f1a1a 0%, #1a2a2a 100%);
+}
+
+/* Modern card styling */
+.modern-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .modern-card {
+  background: rgba(15, 26, 26, 0.95);
+  border: 1px solid rgba(101, 177, 42, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Modern button styling */
+.btn-modern {
+  background: linear-gradient(135deg, #65b12a 0%, #7bc142 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(101, 177, 42, 0.3);
+}
+
+.btn-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(101, 177, 42, 0.4);
+}
+
+.btn-modern-secondary {
+  background: linear-gradient(135deg, #264847 0%, #2d5a57 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(38, 72, 71, 0.3);
+}
+
+.btn-modern-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(38, 72, 71, 0.4);
+}
+
 /* كروت وبلوكات داكنة للوضع الليلي */
 .dark .bg-white,
 .dark .bg-gray-50,
 .dark .bg-gray-100 {
-  background-color: #181f32 !important;
+  background-color: #0f1a1a !important;
 }
 .dark .bg-gray-200,
 .dark .bg-gray-300 {
-  background-color: #232a47 !important;
+  background-color: #1a2a2a !important;
 }
 .dark .shadow-md,
 .dark .shadow-lg {
-  box-shadow: 0 2px 16px 0 #0006 !important;
+  box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.4) !important;
 }
 .dark .text-gray-900,
 .dark .text-gray-800,
 .dark .text-gray-700 {
-  color: #ededed !important;
+  color: #f8fafc !important;
 }
 .dark .border-gray-200,
 .dark .border-gray-300 {
-  border-color: #232a47 !important;
+  border-color: #1a2a2a !important;
 }
 
 /* ألوان خاصة للكروت المميزة */
-.dark .bg-green-100 { background-color: #22c55e22 !important; }
-.dark .bg-red-100 { background-color: #ef444422 !important; }
-.dark .bg-blue-100 { background-color: #2563eb22 !important; }
-.dark .bg-purple-100 { background-color: #a21caf22 !important; }
+.dark .bg-green-100 { background-color: rgba(101, 177, 42, 0.2) !important; }
+.dark .bg-red-100 { background-color: rgba(239, 68, 68, 0.2) !important; }
+.dark .bg-blue-100 { background-color: rgba(38, 72, 71, 0.2) !important; }
+.dark .bg-purple-100 { background-color: rgba(162, 28, 175, 0.2) !important; }
 
 /* ألوان النصوص الثانوية */
 .dark .text-gray-400,
 .dark .text-gray-500,
 .dark .text-gray-600 {
-  color: #a3a3a3 !important;
+  color: #94a3b8 !important;
 }
 
 /* ألوان الجداول */
 .dark table {
-  background-color: #181f32 !important;
+  background-color: #0f1a1a !important;
 }
 .dark thead {
-  background-color: #232a47 !important;
+  background-color: #1a2a2a !important;
 }
 .dark tbody tr {
-  border-bottom: 1px solid #232a47 !important;
+  border-bottom: 1px solid #1a2a2a !important;
 }
 
 /* ألوان البطاقات الجانبية */
 .dark .rounded-lg,
 .dark .rounded-xl {
-  background-color: #181f32 !important;
+  background-color: #0f1a1a !important;
+}
+
+/* Modern chart colors */
+.chart-green {
+  background: linear-gradient(135deg, #65b12a 0%, #7bc142 100%);
+}
+
+.chart-teal {
+  background: linear-gradient(135deg, #264847 0%, #2d5a57 100%);
+}
+
+/* Modern sidebar styling */
+.sidebar-modern {
+  background: linear-gradient(180deg, #264847 0%, #1a2a2a 100%);
+  border-right: 1px solid rgba(101, 177, 42, 0.1);
+}
+
+/* Modern header styling */
+.header-modern {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(101, 177, 42, 0.1);
+}
+
+.dark .header-modern {
+  background: rgba(15, 26, 26, 0.95);
+  border-bottom: 1px solid rgba(101, 177, 42, 0.1);
+}
+
+/* Modern input styling */
+.input-modern {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(101, 177, 42, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+}
+
+.input-modern:focus {
+  border-color: #65b12a;
+  box-shadow: 0 0 0 3px rgba(101, 177, 42, 0.1);
+  outline: none;
+}
+
+.dark .input-modern {
+  background: rgba(15, 26, 26, 0.9);
+  border-color: rgba(101, 177, 42, 0.3);
+  color: #f8fafc;
+}
+
+.dark .input-modern:focus {
+  border-color: #65b12a;
+  box-shadow: 0 0 0 3px rgba(101, 177, 42, 0.2);
+}
+
+/* Modern table styling */
+.table-modern {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .table-modern {
+  background: rgba(15, 26, 26, 0.95);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.table-modern thead {
+  background: linear-gradient(135deg, #264847 0%, #2d5a57 100%);
+  color: white;
+}
+
+.table-modern tbody tr:hover {
+  background: rgba(101, 177, 42, 0.05);
+}
+
+.dark .table-modern tbody tr:hover {
+  background: rgba(101, 177, 42, 0.1);
 }

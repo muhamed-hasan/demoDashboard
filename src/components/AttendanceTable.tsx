@@ -143,10 +143,10 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
         const shift = getValue();
         const normalizedShift = shift?.toLowerCase() || '';
         return (
-          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
             normalizedShift === 'night' 
-              ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
-              : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+              ? 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200'
+              : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
           }`}>
             {shift || 'Day'}
           </span>
@@ -180,10 +180,10 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
   // Loading state
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+      <div className="modern-card rounded-2xl">
         <div className="flex items-center justify-center py-12">
           <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
             <span className="text-gray-500 dark:text-gray-400">Loading attendance data...</span>
           </div>
         </div>
@@ -194,9 +194,9 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
   // Empty state
   if (data.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+      <div className="modern-card rounded-2xl">
         <div className="flex flex-col items-center justify-center py-12 px-6">
-          <div className="w-16 h-16 mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 mb-4 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
             <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -216,11 +216,11 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+    <div className="table-modern overflow-hidden">
       {/* Table Header */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-6 py-4 border-b border-green-200 dark:border-green-800">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Attendance Records
           </h2>
           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -232,13 +232,13 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
+          <thead className="sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                    className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-600/20 transition-colors"
                   >
                     {header.isPlaceholder
                       ? null
@@ -251,11 +251,11 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                className="hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors duration-200"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
