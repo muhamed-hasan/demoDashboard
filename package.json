@@ -6,7 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "service:start": "pm2 start ecosystem.config.js --env production",
+    "service:stop": "pm2 stop attendance-dashboard",
+    "service:restart": "pm2 restart attendance-dashboard",
+    "service:logs": "pm2 logs attendance-dashboard",
+    "service:status": "pm2 status",
+    "service:delete": "pm2 delete attendance-dashboard",
+    "service:save": "pm2 save",
+    "service:startup": "pm2 startup"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.2",
