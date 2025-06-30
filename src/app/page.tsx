@@ -288,6 +288,27 @@ export default function Home() {
     login: item.time,
   }));
 
+  // Chart data for department distribution
+  const departmentChartData = {
+    labels: stats?.deptDistribution ? Object.keys(stats.deptDistribution) : [],
+    datasets: [
+      {
+        data: stats?.deptDistribution ? Object.values(stats.deptDistribution) : [],
+        backgroundColor: [
+          '#3B82F6', // Blue
+          '#10B981', // Green
+          '#F59E0B', // Yellow
+          '#EF4444', // Red
+          '#8B5CF6', // Purple
+          '#06B6D4', // Cyan
+        ],
+        borderWidth: 2,
+        borderColor: '#ffffff',
+      },
+    ],
+  };
+
+
 
 
   if (loading) {
