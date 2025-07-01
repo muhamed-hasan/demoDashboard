@@ -334,21 +334,59 @@ export default function Home() {
 
   return (
     <FilterProvider value={{
-    dateRange,
-    startDate,
-    endDate,
-    selectedDepartments,
-    selectedShift,
-    searchText,
-    setDateRange,
-    setStartDate,
-    setEndDate,
-    setSelectedDepartments,
-    setSelectedShift,
-    setSearchText,
+      dateRange,
+      startDate,
+      endDate,
+      selectedDepartments,
+      selectedShift,
+      searchText,
+      setDateRange,
+      setStartDate,
+      setEndDate,
+      setSelectedDepartments,
+      setSelectedShift,
+      setSearchText,
     }}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        {/* Sidebar */}
+        <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-emerald-800 to-emerald-900 backdrop-blur-xl border-r border-white/10 z-30">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                {/* Swap with <BarChart3 className="w-6 h-6 text-white" /> if using Lucide */}
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18h18" /></svg>
+              </div>
+              <div>
+                <h1 className="text-white font-bold text-lg">industry-run</h1>
+              </div>
+            </div>
+            <nav className="space-y-2">
+              <div className="text-white/60 text-xs font-medium uppercase tracking-wider mb-4">MENU</div>
+              <button className="w-full flex items-center justify-start text-white bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-xl px-4 py-2 mb-2">
+                {/* <Home className="w-4 h-4 mr-3" /> */}
+                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7m-9 2v8m4-8v8m5-4h2a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h2" /></svg>
+                Dashboard
+              </button>
+              <button className="w-full flex items-center justify-start text-white/70 hover:bg-white/10 hover:text-white rounded-xl px-4 py-2">
+                {/* <Users className="w-4 h-4 mr-3" /> */}
+                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                Details
+              </button>
+            </nav>
+          </div>
+          <div className="absolute bottom-6 left-6 right-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center gap-2 text-white/80 text-sm">
+                {/* <Settings className="w-4 h-4" /> */}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" /></svg>
+                Dark Theme
+              </div>
+              <div className="text-white/60 text-xs mt-1">AI/X Developed by industry-run</div>
+            </div>
+          </div>
+        </div>
+        {/* Main Content */}
+        <div className="ml-64 p-8">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
