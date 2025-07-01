@@ -8,21 +8,25 @@ export async function GET(request: NextRequest) {
     // Get the same data that the attendance API returns
     const result = await pool.query(`
       SELECT 
-        t1.id,
-        t1.time,
-        t1.date,
-        t1.first_name,
-        t1.last_name,
-        t1.name,
-        t1.shift,
-        t1.group,
-        t3.time2,
-        t3.rname,
-        t3.card_number,
-        t3.dev
-      FROM table1 t1
-      LEFT JOIN table3 t3 ON t1.id = t3.id
-      ORDER BY t1.time DESC
+        t.id,
+        t.time,
+        t.date,
+        t.time2,
+        t.fname,
+        t.lname,
+        t.name,
+        t.rname,
+        t.group,
+        t.card_number,
+        t.pic,
+        t.dev,
+        d.first_name,
+        d.last_name,
+        d.department,
+        d.shift
+      FROM table3 t
+      LEFT JOIN details d ON t.id = d.id::text
+      ORDER BY t.time DESC
       LIMIT 10
     `);
 
