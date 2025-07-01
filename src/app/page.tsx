@@ -284,6 +284,11 @@ export default function Home() {
     login: item.time,
   }));
 
+  // اطبع البيانات في كونسول المتصفح
+  if (typeof window !== 'undefined') {
+    console.log('attendanceData to AttendanceTable:', attendanceData);
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
