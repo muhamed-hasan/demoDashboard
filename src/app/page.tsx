@@ -274,6 +274,11 @@ export default function Home() {
     setPage(1); // Reset to first page when changing rows per page
   };
 
+  // اطبع البيانات القادمة من الAPI قبل أي معالجة
+  if (typeof window !== 'undefined') {
+    console.log('raw data from API:', data);
+  }
+
   // Transform data for AttendanceTable component
   const attendanceData: AttendanceData[] = data.map(item => ({
     id: item.id,

@@ -271,7 +271,7 @@ export async function GET(request: Request) {
       return {
         id: row.id,
         date: displayDate,
-        time: formatTime(timeString as string),
+        time: timeString,
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         firstName: row.first_name || row.fname || '',
         lastName: row.last_name || row.lname || '',
