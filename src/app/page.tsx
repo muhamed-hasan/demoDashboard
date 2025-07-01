@@ -277,7 +277,7 @@ export default function Home() {
   // Transform data for AttendanceTable component
   const attendanceData: AttendanceData[] = data.map(item => ({
     id: item.id,
-    date: item.time, // Using time as date for display
+    date: item.date || item.time, // Use date field if available, otherwise use time
     name: item.fullName,
     department: item.department,
     shift: item.shift,

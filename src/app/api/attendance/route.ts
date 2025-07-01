@@ -7,13 +7,25 @@ function fixDateString(dateString: string): Date {
     // Log the original date string for debugging
     console.log('Original date string:', dateString);
     
+    // If the string is empty or null, return current date
+    if (!dateString) {
+      console.log('Empty date string, returning current date');
+      return new Date();
+    }
+    
     let date = new Date(dateString);
     
     // Log the parsed date for debugging
     console.log('Parsed date:', date, 'Year:', date.getFullYear());
     
-    // Check if the year is wrong (like 2001) and fix it
-    if (date.getFullYear() < 2020) {
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.log('Invalid date, returning current date');
+      return new Date();
+    }
+    
+    // Only fix if the year is clearly wrong (like 2001, 1970, etc.)
+    if (date.getFullYear() < 2020 && date.getFullYear() > 1900) {
       console.log('Year is wrong, attempting to fix...');
       
       // Try different parsing approaches
@@ -77,7 +89,7 @@ function fixDateString(dateString: string): Date {
     return date;
   } catch (error) {
     console.error('Error fixing date string:', dateString, error);
-    return new Date(dateString);
+    return new Date();
   }
 }
 
@@ -237,9 +249,22 @@ export async function GET(request: Request) {
       console.log('Processed time string:', timeString);
       console.log('Processed date string:', dateString);
       
+      // Use the date field if available, otherwise extract date from time
+      let displayDate = dateString;
+      if (!displayDate && timeString) {
+        try {
+          const timeDate = new Date(timeString as string);
+          if (!isNaN(timeDate.getTime())) {
+            displayDate = timeDate.toISOString().split('T')[0];
+          }
+        } catch (error) {
+          console.error('Error extracting date from time:', error);
+        }
+      }
+      
       return {
         id: row.id,
-        date: dateString || new Date(timeString as string).toISOString().split('T')[0],
+        date: displayDate,
         time: formatTime(timeString as string),
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         firstName: row.first_name || row.fname || '',

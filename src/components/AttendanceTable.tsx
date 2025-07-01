@@ -14,33 +14,62 @@ import {
 // Helper function to fix date parsing issues
 function fixDateString(dateString: string): Date {
   try {
+    // If the string is empty or null, return current date
+    if (!dateString) {
+      return new Date();
+    }
+    
     let date = new Date(dateString);
     
-    // If the year is wrong (like 2001), try to fix it
-    if (date.getFullYear() < 2020 && typeof dateString === 'string' && dateString.includes(' ')) {
-      const parts = dateString.split(' ');
-      if (parts.length >= 2) {
-        const datePart = parts[0];
-        const timePart = parts[1];
-        
-        const dateParts = datePart.split('-');
-        if (dateParts.length === 3) {
-          const year = parseInt(dateParts[0]);
-          const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
-          const day = parseInt(dateParts[2]);
-          
-          // If year is wrong, use current year or 2025
-          const correctYear = year < 2020 ? 2025 : year;
-          date = new Date(correctYear, month, day);
-          
-          // Add time if available
-          if (timePart) {
-            const timeParts = timePart.split(':');
-            if (timeParts.length >= 2) {
-              const hours = parseInt(timeParts[0]);
-              const minutes = parseInt(timeParts[1]);
-              const seconds = timeParts[2] ? parseInt(timeParts[2]) : 0;
-              date.setHours(hours, minutes, seconds);
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      return new Date();
+    }
+    
+    // Only fix if the year is clearly wrong (like 2001, 1970, etc.)
+    if (date.getFullYear() < 2020 && date.getFullYear() > 1900) {
+      // Try different parsing approaches
+      if (typeof dateString === 'string') {
+        // Approach 1: If it contains space, split date and time
+        if (dateString.includes(' ')) {
+          const parts = dateString.split(' ');
+          if (parts.length >= 2) {
+            const datePart = parts[0];
+            const timePart = parts[1];
+            
+            const dateParts = datePart.split('-');
+            if (dateParts.length === 3) {
+              const year = parseInt(dateParts[0]);
+              const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+              const day = parseInt(dateParts[2]);
+              
+              // If year is wrong, use 2025
+              const correctYear = year < 2020 ? 2025 : year;
+              date = new Date(correctYear, month, day);
+              
+              // Add time if available
+              if (timePart) {
+                const timeParts = timePart.split(':');
+                if (timeParts.length >= 2) {
+                  const hours = parseInt(timeParts[0]);
+                  const minutes = parseInt(timeParts[1]);
+                  const seconds = timeParts[2] ? parseInt(timeParts[2]) : 0;
+                  date.setHours(hours, minutes, seconds);
+                }
+              }
+            }
+          }
+        } else {
+          // Approach 2: If it's just a date string, try to extract year and fix
+          const dateParts = dateString.split('-');
+          if (dateParts.length === 3) {
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1;
+            const day = parseInt(dateParts[2]);
+            
+            if (year < 2020) {
+              const correctYear = 2025;
+              date = new Date(correctYear, month, day);
             }
           }
         }
@@ -50,7 +79,7 @@ function fixDateString(dateString: string): Date {
     return date;
   } catch (error) {
     console.error('Error fixing date string:', dateString, error);
-    return new Date(dateString);
+    return new Date();
   }
 }
 
