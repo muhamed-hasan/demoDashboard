@@ -119,29 +119,18 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
       ),
       cell: ({ getValue }) => {
         const dateValue = getValue();
-        console.log('AttendanceTable dateValue:', dateValue, typeof dateValue);
         let date: Date;
-        
         try {
           if (typeof dateValue === 'string') {
-            // إذا كان التاريخ في صيغة YYYY-MM-DD
-            if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              const [year, month, day] = dateValue.split('-');
-              date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-            } else {
-              date = new Date(dateValue);
-              if (isNaN(date.getTime()) || (date.getFullYear() < 2020 && date.getFullYear() > 1900)) {
-                date = fixDateString(dateValue);
-              }
-            }
+            // إذا كان التاريخ في صيغة YYYY-MM-DD أو ISO
+            date = new Date(dateValue);
           } else {
             date = dateValue;
           }
-          
           if (isNaN(date.getTime())) {
             return <span className="text-red-500">Invalid Date</span>;
           }
-          
+          // عرض السنة بشكل صريح
           return (
             <div className="flex flex-col">
               <span className="font-medium">
@@ -157,7 +146,6 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
             </div>
           );
         } catch (error) {
-          console.error('Error parsing date:', dateValue, error);
           return <span className="text-red-500">Date Error</span>;
         }
       },
