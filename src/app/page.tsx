@@ -178,6 +178,8 @@ export default function Home() {
         }
         
         // Transform the data to match the expected format
+        // DEBUG: Raw data from API response
+        console.log('[Home] Raw result.data (first 10):', JSON.stringify(result.data.slice(0, 10), null, 2));
         const transformedData: TableData[] = result.data.map((item: Record<string, unknown>) => ({
           id: item.id as string,
           time: item.time as string,
@@ -186,6 +188,8 @@ export default function Home() {
           department: item.department as string,
         }));
         
+        // DEBUG: Transformed data before enrichment
+        console.log('[Home] TransformedData (first 10):', JSON.stringify(transformedData.slice(0, 10), null, 2));
         setData(transformedData);
           setPaginationInfo(result.pagination);
         
@@ -202,6 +206,7 @@ export default function Home() {
               });
               
               // Enrich the attendance data with employee details
+              // DEBUG: Begin enrichment of transformedData
               const enrichedData = transformedData.map(item => {
                 const employeeDetails = employeeDetailsMap.get(item.id);
                 return {
@@ -213,7 +218,9 @@ export default function Home() {
                 };
               });
               
-              setData(enrichedData);
+              // DEBUG: EnrichedData before set
+               console.log('[Home] EnrichedData (first 10):', JSON.stringify(enrichedData.slice(0, 10), null, 2));
+               setData(enrichedData);
             }
           }
         } catch (detailsError) {

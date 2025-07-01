@@ -118,8 +118,12 @@ export async function GET(request: Request) {
     const dataValues = [...values, limit, offset];
     
     const result = await pool.query(dataQuery, dataValues);
+
+    // DEBUG: Log raw rows fetched from DB
+    console.log('[API/table-data] Raw rows from DB:', JSON.stringify(result.rows.slice(0, 10), null, 2));
     
     // Format the data
+    // DEBUG: Begin transforming rows
     const enrichedData = result.rows.map((row: Record<string, unknown>) => {
       // Format date properly
       let formattedDate = row.date;
@@ -148,6 +152,8 @@ export async function GET(request: Request) {
         dev: row.dev
       };
       
+      // DEBUG: Log each enriched item (first few for brevity)
+      console.log('[API/table-data] Enriched item:', enrichedItem);
       return enrichedItem;
     });
     
@@ -156,6 +162,9 @@ export async function GET(request: Request) {
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
     
+    // DEBUG: Log final enrichedData array (first 10)
+    console.log('[API/table-data] Final enrichedData (first 10):', JSON.stringify(enrichedData.slice(0, 10), null, 2));
+
     const paginationInfo = {
       currentPage: page,
       totalPages,

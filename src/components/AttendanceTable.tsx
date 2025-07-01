@@ -119,6 +119,8 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
       ),
       cell: ({ getValue }) => {
         const dateValue = getValue();
+        // DEBUG: Log raw date value for this cell
+        console.log('[AttendanceTable] Raw dateValue:', dateValue);
         let date: Date;
         try {
           if (typeof dateValue === 'string') {
@@ -133,6 +135,8 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
             date = dateValue as Date;
           }
 
+          // DEBUG: Parsed date object
+          console.log('[AttendanceTable] Parsed date:', date);
           if (isNaN(date.getTime())) {
             return <span className="text-red-500">Invalid Date</span>;
           }
