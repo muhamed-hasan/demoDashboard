@@ -119,23 +119,25 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
       ),
       cell: ({ getValue }) => {
         const dateValue = getValue();
+        console.log('AttendanceTable dateValue:', dateValue, typeof dateValue);
         let date: Date;
         
         try {
-          // Handle different date formats
           if (typeof dateValue === 'string') {
-            // First try to parse normally
-            date = new Date(dateValue);
-            
-            // Only use fixDateString if the date is clearly wrong
-            if (isNaN(date.getTime()) || (date.getFullYear() < 2020 && date.getFullYear() > 1900)) {
-              date = fixDateString(dateValue);
+            // إذا كان التاريخ في صيغة YYYY-MM-DD
+            if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              const [year, month, day] = dateValue.split('-');
+              date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            } else {
+              date = new Date(dateValue);
+              if (isNaN(date.getTime()) || (date.getFullYear() < 2020 && date.getFullYear() > 1900)) {
+                date = fixDateString(dateValue);
+              }
             }
           } else {
             date = dateValue;
           }
           
-          // Check if date is valid
           if (isNaN(date.getTime())) {
             return <span className="text-red-500">Invalid Date</span>;
           }
