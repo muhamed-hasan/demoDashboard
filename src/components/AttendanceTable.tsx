@@ -122,11 +122,17 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
         let date: Date;
         try {
           if (typeof dateValue === 'string') {
-            // إذا كان التاريخ في صيغة YYYY-MM-DD أو ISO
+            // حاول تحليل التاريخ مباشرةً أولاً
             date = new Date(dateValue);
+
+            // إذا فشل التحليل أو كانت السنة غير صحيحة، استخدم الدالة المساعدة لإصلاح التاريخ
+            if (isNaN(date.getTime()) || date.getFullYear() < 2020) {
+              date = fixDateString(dateValue);
+            }
           } else {
-            date = dateValue;
+            date = dateValue as Date;
           }
+
           if (isNaN(date.getTime())) {
             return <span className="text-red-500">Invalid Date</span>;
           }
