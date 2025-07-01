@@ -1,8 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #264847;
-  --foreground: #ededed;
+  --background: #F5F9FF;
+  --sidebar: #015e52;
+  --card-background: #ffffff;
+  --primary: #2563eb;
+  --secondary: #6b7280;
+  --success: #d1fae5;
+  --success-text: #059669;
+  --danger: #fee2e2;
+  --danger-text: #dc2626;
+  --info: #dbeafe;
+  --info-text: #1e3a8a;
+  --accent: #ede9fe;
+  --accent-text: #7c3aed;
+  --gray: #f3f4f6;
+  --text: #111827;
+  --sidebar-text: #ffffff;
+  --sidebar-active-bg: #1d8376;
+  --sidebar-active-text: #ffffff;
+  --card-radius: 1rem;
+  --card-shadow: 0px 10px 15px rgba(0, 0, 0, 0.05);
 }
 
 /* Glassmorphism utility */
@@ -41,8 +60,8 @@ select { color: #111827; }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  font-family: 'Cairo', Arial, Helvetica, sans-serif;
 }
 
 /* كروت وبلوكات داكنة للوضع الليلي */
