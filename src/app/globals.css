@@ -5,6 +5,10 @@
   --foreground: #ededed;
 }
 
+/* Select dropdown text colors */
+select { color: #111827; }
+.dark select { color: #ededed; }
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
