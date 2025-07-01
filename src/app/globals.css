@@ -5,6 +5,18 @@
   --foreground: #ededed;
 }
 
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-radius: 12px;
+}
+.dark .glass {
+  background: rgba(38, 72, 71, 0.25);
+}
+
 /* Select dropdown text colors */
 select { color: #111827; }
 .dark select { color: #ededed; }
