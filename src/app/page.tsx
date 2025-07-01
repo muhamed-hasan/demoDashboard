@@ -593,8 +593,8 @@ export default function Home() {
                           datasets: [{
                             data: [stats.heidelbergStats.presentCount, stats.heidelbergStats.absentCount],
                             backgroundColor: [
-                              'var(--success-text)',
-                              'var(--danger-text)'
+                              '#10b981', // green
+                              '#ef4444'  // red
                             ],
                             borderWidth: 0,
                           }]
@@ -627,8 +627,8 @@ export default function Home() {
                           datasets: [{
                             data: [stats.naserStats.presentCount, stats.naserStats.absentCount],
                             backgroundColor: [
-                              'var(--success-text)',
-                              'var(--danger-text)'
+                              '#10b981', // green
+                              '#ef4444'  // red
                             ],
                             borderWidth: 0,
                           }]
