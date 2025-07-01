@@ -295,7 +295,12 @@ export default function ReportsPage() {
                         }
                         
                         // Otherwise, try to parse as full date string
-                        const date = fixDateString(rec.date);
+                        let date = new Date(rec.date);
+                        
+                        // Only use fixDateString if the date is clearly wrong
+                        if (isNaN(date.getTime()) || (date.getFullYear() < 2020 && date.getFullYear() > 1900)) {
+                          date = fixDateString(rec.date);
+                        }
                         
                         if (!isNaN(date.getTime())) {
                           return date.toLocaleDateString('en-US', {
@@ -313,7 +318,12 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                     {rec.login ? (() => {
                       try {
-                        const time = fixDateString(rec.login);
+                        let time = new Date(rec.login);
+                        
+                        // Only use fixDateString if the date is clearly wrong
+                        if (isNaN(time.getTime()) || (time.getFullYear() < 2020 && time.getFullYear() > 1900)) {
+                          time = fixDateString(rec.login);
+                        }
                         
                         if (!isNaN(time.getTime())) {
                           return time.toLocaleTimeString('en-US', {
@@ -331,7 +341,12 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                     {rec.logout ? (() => {
                       try {
-                        const time = fixDateString(rec.logout);
+                        let time = new Date(rec.logout);
+                        
+                        // Only use fixDateString if the date is clearly wrong
+                        if (isNaN(time.getTime()) || (time.getFullYear() < 2020 && time.getFullYear() > 1900)) {
+                          time = fixDateString(rec.logout);
+                        }
                         
                         if (!isNaN(time.getTime())) {
                           return time.toLocaleTimeString('en-US', {

@@ -124,7 +124,13 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
         try {
           // Handle different date formats
           if (typeof dateValue === 'string') {
-            date = fixDateString(dateValue);
+            // First try to parse normally
+            date = new Date(dateValue);
+            
+            // Only use fixDateString if the date is clearly wrong
+            if (isNaN(date.getTime()) || (date.getFullYear() < 2020 && date.getFullYear() > 1900)) {
+              date = fixDateString(dateValue);
+            }
           } else {
             date = dateValue;
           }

@@ -98,7 +98,13 @@ function formatTime(dateTimeString: string): string {
   try {
     console.log('formatTime input:', dateTimeString);
     
-    const date = fixDateString(dateTimeString);
+    // First try to parse normally
+    let date = new Date(dateTimeString);
+    
+    // Only use fixDateString if the date is clearly wrong
+    if (isNaN(date.getTime()) || (date.getFullYear() < 2020 && date.getFullYear() > 1900)) {
+      date = fixDateString(dateTimeString);
+    }
     
     // Validate the date
     if (isNaN(date.getTime())) {
