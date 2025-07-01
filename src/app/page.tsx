@@ -186,6 +186,7 @@ export default function Home() {
           fullName: item.fullName as string,
           shift: item.shift as string,
           department: item.department as string,
+          date: item.date as string,
         }));
         
         // DEBUG: Transformed data before enrichment
@@ -211,6 +212,7 @@ export default function Home() {
                 const employeeDetails = employeeDetailsMap.get(item.id);
                 return {
                   ...item,
+                  date: item.date, // احتفظ بحقل التاريخ كما هو
                   firstName: employeeDetails?.first_name || '',
                   lastName: employeeDetails?.last_name || '',
                   department: employeeDetails?.department || item.department,
