@@ -252,16 +252,12 @@ export async function GET(request: Request) {
         dateString = dateString.toISOString().split('T')[0];
       }
       
-      console.log('Processed time string:', timeString);
-      console.log('Processed date string:', dateString);
-      
-      // Use the date field if available, otherwise extract date from time
-      let displayDate = dateString;
-      if (!displayDate && timeString) {
+      // إذا لم يوجد dateString استخدم التاريخ من timeString
+      if (!dateString && timeString) {
         try {
           const timeDate = new Date(timeString as string);
           if (!isNaN(timeDate.getTime())) {
-            displayDate = timeDate.toISOString().split('T')[0];
+            dateString = timeDate.toISOString().split('T')[0];
           }
         } catch (error) {
           console.error('Error extracting date from time:', error);
@@ -270,8 +266,8 @@ export async function GET(request: Request) {
       
       return {
         id: row.id,
-        date: displayDate,
-        time: timeString,
+        date: dateString, // التاريخ الخام فقط
+        time: timeString, // الوقت الخام فقط
         fullName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}`.trim() : row.name || '',
         firstName: row.first_name || row.fname || '',
         lastName: row.last_name || row.lname || '',
