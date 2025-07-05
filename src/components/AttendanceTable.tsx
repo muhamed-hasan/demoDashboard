@@ -155,7 +155,7 @@ export default function AttendanceTable({ data, loading = false }: AttendanceTab
               </span>
             </div>
           );
-        } catch (_error) {
+        } catch {
           return <span className="text-red-500">Date Error</span>;
         }
       },

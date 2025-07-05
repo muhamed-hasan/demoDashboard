@@ -93,45 +93,7 @@ function fixDateString(dateString: string): Date {
   }
 }
 
-// Function to format time to show only day and time
-// Note: This function is currently unused but kept for future use
-function formatTime(dateTimeString: string): string {
-  try {
-    console.log('formatTime input:', dateTimeString);
-    
-    // First try to parse normally
-    let date = new Date(dateTimeString);
-    
-    // Only use fixDateString if the date is clearly wrong
-    if (isNaN(date.getTime()) || (date.getFullYear() < 2020 && date.getFullYear() > 1900)) {
-      date = fixDateString(dateTimeString);
-    }
-    
-    // Validate the date
-    if (isNaN(date.getTime())) {
-      console.warn('Invalid date string:', dateTimeString);
-      return dateTimeString;
-    }
-    
-    const day = date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-    const time = date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
-    
-    const result = `${day} ${time}`;
-    console.log('formatTime output:', result);
-    return result;
-  } catch (error) {
-    console.error('Error formatting time:', dateTimeString, error);
-    return dateTimeString;
-  }
-}
+
 
 export async function GET(request: Request) {
   try {
