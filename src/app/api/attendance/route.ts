@@ -94,6 +94,7 @@ function fixDateString(dateString: string): Date {
 }
 
 // Function to format time to show only day and time
+// Note: This function is currently unused but kept for future use
 function formatTime(dateTimeString: string): string {
   try {
     console.log('formatTime input:', dateTimeString);

@@ -7,10 +7,6 @@ import {
   ArcElement,
   Tooltip,
   Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
 } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { FilterProvider } from '@/contexts/FilterContext';

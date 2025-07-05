@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     console.log('=== DEBUG TABLE DATA ===');
     
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform data for AttendanceTable component (like in page.tsx)
-    const attendanceData = enrichedData.map((item: any) => ({
+    const attendanceData = enrichedData.map((item: Record<string, unknown>) => ({
       id: item.id,
       date: item.date || item.time, // Use date field if available, otherwise use time
       name: item.fullName,
